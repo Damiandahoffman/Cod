@@ -1,0 +1,6 @@
+name = Eran
+description = Main module for the ISSFF cod system
+core = 6.x
+dependencies[] = views
+dependencies[] = signup
+package = ISSFF cod

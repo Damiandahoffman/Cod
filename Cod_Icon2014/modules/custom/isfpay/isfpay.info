@@ -1,0 +1,4 @@
+name = isfpay
+description = payment module for the ISSFF cod system, based on ec-card
+core = 6.x
+package = ISSFF cod

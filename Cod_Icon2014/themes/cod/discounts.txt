@@ -1,0 +1,1 @@
+{"first": "3", "firstDiscount": "0.9", "special": "6", "specialDiscount": "0.5"}

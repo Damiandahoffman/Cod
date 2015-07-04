@@ -1,0 +1,935 @@
+
+
+/* $Id: local-sample.css 7156 2010-04-24 16:48:35Z chris $ */
+/****************************/
+/* LOCAL CSS                */
+/****************************/
+/* Put your custom CSS and CSS overrides in this file and  */
+/* rename it local.css.  By restricting your CSS changes   */
+/* to local.css, your changes will not be overwritten when */
+/* upgrading to a new version of this theme.  You can also */
+/* use a local-rtl.css file for the equivalent in RTL.     */
+/* Steps to activate local.css:                       */
+/* 1. Add your custom CSS to this file                */
+/* 2. Rename this file to local.css                   */
+/* 3. Clear cached data at admin/settings/performance */
+@font-face {
+	font-family: 'Alef';
+	src: url('Alef-Regular.eot');
+	src: url('Alef-Regular.eot?#iefix') format('embedded-opentype'),
+	url('Alef-Regular.woff') format('woff'),
+	url('Alef-Regular.ttf') format('truetype'),
+	url('Alef-Regular.svg#webfont') format('svg');
+ }
+
+html {
+	background: #C59B6B;
+	color: #000000;
+	font-family: "Alef",Sans-serif, "Arial Black", Arial;
+	background: linear-gradient(#FFF,#88D4EA) repeat scroll 0% 0%;
+ }
+
+.page {
+	width: 100%;
+	margin: 0px auto;
+	font-family: "Alef",Sans-serif, "Arial Black", Arial;
+	line-height: 1.1;
+ }
+
+#site-name {
+	float: left;
+	margin-left: 65px;
+ }
+
+.main-wrapper {
+	margin-top: 0px;
+	padding-top: 0px;
+	border-style: none;
+	border-width: 0px;
+	background-position: 0px -1px;
+	background: #FFFFFF;
+ }
+
+.main-inner {margin-top: 30px;}
+
+#main, .grid16-16 {
+	width: 1300px;
+	margin: 0px auto;
+ }
+
+#page-inner {min-width: 1080px;}
+
+a, a:link, a:visited {color: #E52629;}
+
+/* other module fixes */
+/* vertical tabs fix */
+div.vertical-tabs {
+	margin-left: 15em;
+	margin-right: 0em;
+ }
+
+/* form column fix */
+.node-form .form-region-right {float: left;}
+
+.node-form-has-region-right .form-region-main {float: right;}
+
+/*Nice Menu fix*/
+ul.nice-menu, ul.nice-menu ul {margin: 0px !important;}
+
+.block-nice_menus {overflow: visible !important;}
+
+ul.nice-menu, ul.nice-menu ul {z-index: 100;}
+
+tr.odd, tr.odd td {background-color: #A1B0DE;}
+
+tr.even, tr.even td {background-color: #EFD58D;}
+
+/**/
+.disabled_submit input {opacity: 0.4;}
+
+.view-admin-content-filtered {}
+
+	.view-admin-content-filtered .view-header {}
+
+		.view-admin-content-filtered .view-header img {
+			margin: 10px;
+			vertical-align: middle;
+		 }
+
+.form-region-footer {
+	padding-top: 10px;
+	clear: both;
+ }
+
+#views-bulk-operations-form--1 td {white-space: nowrap;}
+
+	#views-bulk-operations-form--1 td.views-field-title {white-space: normal;}
+
+	#views-bulk-operations-form--1 td.views-field-field-pricegroup-value {font-weight: bold;}
+
+.view-header {
+	font-size: 20px;
+	font-weight: bold;
+	text-decoration: underline;
+ }
+
+.SingupsRequestsPerEvent {
+	width: 350px;
+	float: right;
+ }
+
+.SingupsPerEvent {
+	width: 365px;
+	float: right;
+	margin-right: 30px;
+ }
+
+#views-bulk-operations-select {margin-top: 40px;}
+
+caption {text-align: right;}
+
+.ActionItem {
+	float: right;
+	width: 240px;
+	height: 33px;
+	padding-top: 6px;
+	margin-left: 10px;
+	color: black;
+	background: linear-gradient(#88D4EA, #FFF) repeat scroll 0% 0% transparent;
+	background-position: 0px -661px;
+ }
+
+.ActionItemCommand {
+	cursor: pointer;
+	display: inline;
+	font-size: 18px;
+	font-style: italic;
+	font-weight: bold;
+ }
+
+.ActionItemFloat {
+	position: absolute;
+	width: 200px;
+	font-size: 16px;
+	background-position: 0px bottom;
+	margin-right: 0px;
+	z-index: 100;
+	background: linear-gradient(#88D4EA, #FFF) repeat scroll 0% 0% transparent;
+	display: none;
+	padding: 20px;
+	-webkit-border-bottom-right-radius: 10px;
+	-webkit-border-bottom-left-radius: 10px;
+	-moz-border-radius-bottomright: 10px;
+	-moz-border-radius-bottomleft: 10px;
+	border-bottom-right-radius: 10px;
+	border-bottom-left-radius: 10px;
+ }
+
+.ActionItem a, .ActionItem a:link, .ActionItem a:hover, .ActionItem a:visited {
+	color: red;
+	text-decoration: none;
+ }
+
+.ActionItemFloat  a, .ActionItemFloat a:link, .ActionItemFloat a:hover, .ActionItemFloat a:visited {
+	color: red;
+	text-decoration: none;
+ }
+
+.ActionItemFloat a:hover, .ActionItemFloat a:visited {text-decoration: underline;}
+
+.ActionsBar {margin-right: 10%;}
+
+.ActionItemSchedule {
+	width: 200px;
+	background: linear-gradient(#88D4EA, #FFF) repeat scroll 0% 0%; /* margin-right:28px;*/
+ }
+
+.ActionItemLogin {}
+
+.ActionItemHowTo {}
+
+.ActionItemBasket {}
+
+.ActionItemHowTo .ActionItemFloat {
+	padding: 0;
+	width: 240px;
+ }
+
+.HowToDiagram {
+	width: 219px;
+	height: 425px;
+	background-image: url('../images/tranceperant.png');
+	background-position: -3px -87px;
+	margin-right: 7px;
+ }
+
+.ActionItemBasket .ActionItemFloat {
+	padding: 0;
+	width: 240px;
+ }
+
+.Leaf {
+	width: 31px; /*background-image: url('../images/program-bg-dark.jpg');*/
+	height: 15px;
+	display: inline-block;
+	margin-right: 5px;
+ }
+
+.Leaf1 {background-position: 249px -355px;}
+
+.Leaf2 {background-position: 217px -355px;}
+
+.Leaf3 {background-position: 189px -355px;}
+
+.Leaf4 {
+	background-position: 157px -355px;
+	margin-right: 36px;
+ }
+
+ 
+#day_links {
+margin-right:10px;
+font-size: 16px;
+margin-bottom: 10px;
+font-weight: bold;
+} 
+#day_links a {
+border: 2px solid black;
+padding : 3px;
+}
+ 
+ 
+ 
+.session-calendar-container  a, .session-calendar-container  a:link, .session-calendar-container  a:visited {
+	color: red;
+	font-weight: bold;
+ }
+
+.session-calendar-container {
+	background-image: url('../images/program-bg-dark.jpg');
+	margin-bottom: 20px;
+	margin-right: 5px;
+	overflow-x: scroll;
+ }
+
+.session-calendar {
+	border-collapse: collapse;
+	border: 0px;
+	; /*margin-top: 10px*/
+ }
+
+	.session-calendar tbody {border: 0px none;}
+
+	.session-calendar th ,.session-calendar td, .session-calendar tr.even, .session-calendar tr.even td, .session-calendar tr.odd, .session-calendar tr.odd td {
+		background-color: transparent;
+		border: 1px solid #000000;
+		vertical-align: top;
+		padding: 0px;
+	 }
+
+	.session-calendar td.session.empty {background-color: rgba(131, 130, 219 ,0.3);}
+
+	.session-calendar th {
+		border-bottom: 3px solid #000000;
+		color: black;
+		font-size: 24px;
+		padding: 5px 2px;
+		text-align: center;
+		vertical-align: middle;
+		font-weight: normal;
+		background-color: #C11213;
+		line-height: 24px;
+		background-image: url('../images/ulamot.jpg');
+	 }
+
+.cellhighlight {background-image: url('../images/cellhighlight.png') !important;}
+
+.session-calendar .session {
+	width: 170px;
+	height: 120px;
+	text-align: center;
+ }
+
+.session-calendar, .session-calendar a, .session-calendar a:visited, .session-calendar a:active {
+	font-size: 16px;
+	line-height: 100%;
+ }
+
+.session-calendar .views-field-ops {
+	display: block;
+	text-align: left;
+ }
+
+.actionbasket {
+	height: 22px;
+	vertical-align: middle;
+	margin: 0px 0px 0px 5px;
+ }
+
+.HeaderLogo {
+	background-image: url('../images/icon2015_header.jpg');
+	height: 200px;
+	background-repeat: no-repeat;
+	background-position: center;
+	background-color: #ffffff
+ }
+
+h2.SessioCalendarDayCaption {
+	margin-right: 15px;
+	font-size: 32px;
+ }
+
+.session-calendar .time-label {
+	width: 75px;
+	height: 150px;
+	text-align: center;
+	color: black;
+	font-weight: bold;
+	font-size: 22px;
+	background-color: #C11213 !important;
+	background-image: url('../images/ulamot.jpg');
+ }
+
+.time-label-wrapper {
+	margin-top: 100%;
+	display: block;
+ }
+
+.views-field-field-track-value,.views-field-field-track-value .field-content {display: block;}
+
+.views-field-field-speakers-uid {
+	color: #000000;
+	font-style: italic;
+ }
+
+	.views-field-field-speakers-uid a, .views-field-field-speakers-uid a:link,.views-field-field-speakers-uid a:visited {
+		color: black;
+		font-weight: normal;
+	 }
+
+.session-calendar-container .views-item {position: relative;}
+
+.session-calendar-container .views-field-ops {color: #000000; /*left: 0; position: absolute; top: 88px;*/}
+
+	.session-calendar-container .views-field-ops a, .session-calendar-container .views-field-ops a:link, .session-calendar-container .views-field-ops a:visited {
+		color: black;
+		font-weight: bold;
+	 }
+
+.session-calendar-container .views-field-title {
+	max-height: 87px;
+	overflow: visible;
+	text-overflow: ellipsis;
+	padding: 0px 5px;
+ }
+
+.session-calendar-container .views-field-field-speakers-uid {
+	padding: 4px 2px 0px 2px;
+	white-space: normal;
+	min-height: 34px;
+	overflow: hidden;
+	display: inline-block; /*text-overflow: ellipsis;*/
+	color: black;
+ }
+
+.views-field-field-speakers-uid .field-item {
+	display: inline;
+	margin-right: 2px;
+ }
+
+.session-calendar-container .views-field-ops .flagged a,
+.session-calendar-container .views-field-ops .flagged a:link,
+.session-calendar-container .views-field-ops .flagged a:visited {
+	color: #000000;
+	font-weight: bold;
+ }
+
+.session-calendar-container .views-field-ops .approved  a,
+.session-calendar-container .views-field-ops .approved  a:link,
+.session-calendar-container .views-field-ops .approved  a:visited {
+	color: #000000;
+	font-weight: bold;
+ }
+
+.views-field-title strong {/*font-weight: normal !important;*/}
+
+.category {
+	height: 17px;
+	font-style: italic;
+	font-size: 18px;
+	color: #000000;
+	background-color: #62BEB3;
+	margin-bottom: 3px;
+ }
+
+.category1 {/*background-color: #92D050;color:white;*/}
+
+/*מדע ואקדמיה*/
+.category2 {/*background-color: #948A54;color:white;*/}
+
+/*ספרות וכתיבה*/
+.category3 {/*background-color: #C6D9F1;color:white;*/}
+
+/*על המסך*/
+.category4 {/*background-color: #FF99FF;color:white;*/}
+
+/*קומיקס אנימה ומנגה*/
+.category5 {/*background-color: #943634;color:white;*/}
+
+/*אטרקציות, חובבים ומופעים*/
+.category6 {/*background-color: #17365D;color:white;*/}
+
+/*משחקי תפקידים*/
+.trackהרצאה {
+	background-color: #465daa;
+	color: white;
+ }
+
+.trackמשחק {
+	background-color: #42C7F2;
+	color: white;
+ }
+
+.trackלארפ {
+	background-color: #e22826;
+	color: white;
+ }
+
+.trackתחרות {
+	background-color: #6cbf5d;
+	color: white;
+ }
+
+.trackסדנה {background-color: #A5A39A; color:white}
+
+.trackפאנל {
+	background-color: #f47b20;
+	color: white;
+ }
+
+.trackמופע {background-color: #6cbf5d;color:white}
+
+.trackשעשועון {background-color: #6cbf5d;color:white}
+
+.trackהקרנה {background-color: #feef42;color:black}
+
+.trackמפגש {
+	background-color: #7157a5;
+	color: white;
+ }
+
+.trackמיניאטורות {
+	background-color: #f37d7e;
+	color: white;
+ }
+
+.trackטורניר {
+	background-color: #2d2b72;
+	color: white;
+ }
+
+.trackאורח {
+	background-color: #e22826;
+	color: white;
+ }
+
+.trackמיוחד {
+	background-color: #7157a5;
+	color: white;
+ }
+
+.trackהקלטה {
+	background-color: #7157a5;
+	color: white;
+ }
+
+.trackדיבייט {
+	background-color: #f47b20;
+	color: white;
+ }
+
+.trackילדים ונוער {
+	background-color: #62BEB3;
+	color: white;
+ }
+
+.trackהשקה {
+	background-color: #be62ac;
+	color: white;
+ }
+
+.category.trackחינם.אירוע {
+	background-color: #be62ac;
+	color: white;
+ }
+
+/*
+.content {width: 600px;}
+.session {float:right;width:600px;}
+.sessionmeta {float:right;width:200px;}
+*/
+.tooltip{
+    /*display: inline;
+    position: relative;*/
+}
+/*
+.tooltip:hover:after{
+    background: #333;
+    background: rgba(0,0,0,.8);
+    border-radius: 5px;
+    color: #fff;
+    content: attr(data-brief);
+    padding: 5px 15px;
+    position: absolute; 
+    z-index: 999;
+    width: 220px;
+	margin-right:-150px;
+}
+
+.tooltip span.info {
+  font-size : 12px;
+  direction: rtl;
+  }
+
+*/
+
+
+
+.token-tree {direction: ltr;}
+
+.FootNote {
+	display: block;
+	text-align: center;
+	padding: 10px;
+	color: #000000;
+ }
+
+	.FootNote a, .FootNote a:link, .FootNote:active, .FootNote a:hover, .FootNote a:visited {color: red;}
+
+	.FootNote a:active, .FootNote a:hover {text-decoration: underline;}
+
+.sessionheader {
+	float: right;
+	width: 185px;
+	margin-left: 20px;
+	margin-top: -10px;
+ }
+
+/*  .sessionpagetitle { color: #000000; font-size: 60px; font-weight: bold; font-style: italic; }*/
+.sessiontrack {
+	font-size: 40px;
+	font-weight: bold;
+	height: auto;
+	margin: 10px 0px;
+	padding: 10px 0;
+	text-align: center;
+ }
+
+.sessionbody {
+	float: right;
+	width: 450px;
+	margin-left: 10px;
+	font-size: 14px;
+	background: none repeat scroll 0% 0% #FFFCDB;
+	padding: 10px;
+	border: 10px solid #C0C0C0;
+ }
+
+.sessiotitle {
+	font-size: 28px;
+	font-weight: bold;
+	display: block;
+	margin-bottom: 0px;
+ }
+
+.sessionspeaker {
+	font-size: 16px;
+	font-style: italic;
+	font-weight: bold;
+	margin-bottom: 20px;
+ }
+
+.sessionmeta {
+	float: left;
+	width: 225px;
+	padding: 24px;
+	background-image: url('../images/program-bg-dark.jpg');
+	font-size: 13px;
+	border-radius: 15px;
+ }
+
+.sessionmetatitle {
+	display: block;
+	color: black;
+	font-size: 18px;
+	font-style: italic;
+	font-weight: bold;
+	margin-bottom: 4px;
+ }
+
+.sessionmetavalue {
+	display: block;
+	color: black;
+	margin: 0px 6px 8px 0px;
+ }
+
+.downloadschedule {
+	color: #000000;
+	font-size: 20px;
+	color: #000000;
+	font-weight: bold;
+	margin-right: 115px;
+ }
+
+	.downloadschedule a, .downloadschedule a:link, .downloadschedule:active, .downloadschedule a:hover {
+		color: #000000;
+		font-size: 20px;
+		color: #000000;
+		font-weight: bold;
+	 }
+
+.ActionItemFloat .views-row {
+	border-bottom: 1px solid #000000;
+	margin: 0px;
+	padding: 10px;
+ }
+
+.ActionItemFloat .views-field-ops {
+	text-align: left;
+	margin-top: 5px;
+ }
+
+.ActionItemFloat .views-field-title {font-weight: bold;}
+
+.ActionItemFloat .view {}
+
+.ActionItemFloat .view-empty {padding: 10px;}
+
+.ActionItemFloat .view-content {
+	max-height: 270px;
+	overflow-y: auto;
+	font-size: 14px;
+	font-weight: bold;
+	overflow-x: hidden;
+ }
+
+.callcenter {
+	float: right;
+	width: 64px;
+	height: 64px;
+	background-image: url('../images/tranceperant.png');
+	background-position: 567px -10px;
+	margin-top: -11px;
+ }
+
+.ui-overlay {text-align: center;}
+
+.ui-widget-overlay {
+	background: repeat-x scroll 50% 50% #AAA;
+	opacity: 0.7;
+	-ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=50)";
+	filter: alpha(opacity=50);
+ }
+
+.ui-widget-overlay {
+	height: 800px;
+	position: absolute !important;
+	left: 30px !important;
+	top: 330px !important;
+ }
+
+.registrationheader {
+	float: right;
+	width: 185px;
+	margin-left: 40px;
+ }
+
+.registrationmetanumbers {
+	float: right;
+	width: 35px;
+	height: 330px;
+	background-image: url('../images/tranceperant.png');
+	background-position: 526px -86px
+ }
+
+.registrationmetatext {
+	float: right;
+	width: 100px;
+	height: 260px;
+	margin-right: 10px;
+	color: #000000;
+ }
+
+.registrationmetadiagram {
+	float: right;
+	width: 235px;
+	height: 260px;
+	background-image: url('../images/tranceperant.png');
+	background-position: 761px -86px
+ }
+
+.registrationmetacall {
+	margin-top: 282px;
+	width: 235px;
+	height: 50px;
+ }
+
+.registrationbody {
+	float: right;
+	width: 250px;
+ }
+
+.registrationmeta {
+	float: left;
+	background-image: url("../images/program-bg-dark.jpg");
+	border-radius: 15px;
+	padding: 24px;
+	font-size: 14px;
+	text-align: right;
+	margin-left: 6%;
+ }
+
+/*.footer-message-wrapper { padding-top: 200px;} */
+.astr {
+	font-size: 10px;
+	color: #000000;
+ }
+
+.profileheader {
+	float: right;
+	width: 185px;
+	margin-top: 50px;
+	margin-left: 40px;
+	color: black;
+ }
+
+.profilebody {
+	font-size: 18px;
+	color: black;
+	float: right;
+	margin-top: 50px;
+	width: 250px;
+ }
+
+.fieldtitle {
+	font-weight: bold;
+	margin: 10px 0px;
+	font-style: italic;
+ }
+
+.fieldvalue {margin-right: 10px;}
+
+.views-field-markup-8 {
+	direction: ltr;
+	text-align: right;
+ }
+
+.ColorIndex {
+	width: 612px;
+	height: 54px;
+	float: left;
+	background-image: url('../images/mikra-tzvaim.png');
+ }
+
+/* Create Tickets form */
+.ui-spinner {position: relative}
+
+.ui-spinner-buttons {position: absolute}
+
+.ui-spinner-button {overflow: hidden}
+
+.AddTicketsTable {margin-top: 10px;}
+
+	.AddTicketsTable .form-item {
+		margin: 0px;
+		padding: 0px;
+		direction: ltr;
+		text-align: right;
+	 }
+
+		.AddTicketsTable .form-item input {border-radius: 4px 0 0 4px;}
+
+	.AddTicketsTable .ui-corner-tr {border-top-right-radius: 4px;}
+
+	.AddTicketsTable .ui-corner-br {border-bottom-right-radius: 4px;}
+
+.RegularPrice {}
+
+.MemberPrice {display: none;}
+
+.form-radios .form-item {}
+
+#createtickets-myform fieldset {display: none;}
+
+.DarkButton {
+	color: #000000;
+	font-size: 16px;
+	padding: 3px 10px;
+	display: inline-block;
+	margin-top: 10px;
+	margin-left: 10px;
+	border-radius: 3px; /*background-image:url('../images/program-bg-dark.jpg');*/
+ }
+
+	.DarkButton a, .DarkButton a:link, .DarkButton:active, .DarkButton a:hover {
+		color: red;
+		font-weight: bold;
+		text-decoration: none;
+	 }
+
+	.DarkButton a:hover {color: red;}
+
+div.ScheduleCashierButtons .DarkButton.PrintTicketsButton {
+	margin-right: 8px;
+ }
+
+.paidTicketsLeft0 {color: red;}
+
+.categoryהרצאה {color: red;}
+
+.ScheduleCashierButtons {margin-bottom: 10px;}
+
+.DarkSession  div.views-item {
+	opacity: 0.2;
+	-ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=20)";
+	filter: alpha(opacity=20);
+	-moz-opacity: 0.2;
+	-khtml-opacity: 0.2;
+ }
+
+.TermsMenu {
+	background-image: url("../images/bg-dark-round.jpg");
+	margin: 0 6px 8px 0;
+	padding: 3px 12px;
+	color: black;
+	max-width: 90%;
+ }
+
+	.TermsMenu  .TermsTitle {
+		font-size: 18px;
+		font-style: italic;
+		font-weight: bold;
+		padding: 2px;
+	 }
+
+	.TermsMenu  .Term {
+		margin: 2px 0px 2px 10px;
+		padding: 2px 5px;
+		cursor: pointer;
+		font-size: 16px;
+		float: right;
+		text-decoration: underline;
+	 }
+
+		.TermsMenu  .Term.Selected {background-color: #FEC516;}
+
+.ScheduleHeaderWrapper {width: 980px;}
+
+.ActionItemFloat ol li {line-height: 100%;}
+
+/* jQuery Countdown styles 1.6.3. */
+.hasCountdown {
+	background-color: #EEEEEE;
+	border: 1px solid #CCCCCC;
+	width: 400px;
+	margin: 0 auto;
+	height: 77px;
+	font-size: 18px;
+	background-image: url("../images/program-bg-dark.jpg");
+ }
+
+.countdown_rtl {direction: rtl;}
+
+.countdown_holding span {color: #888;}
+
+.countdown_row {
+	clear: both;
+	width: 100%;
+	padding: 0px 2px;
+	text-align: center;
+	color: black;
+	font-style: italic;
+ }
+
+.countdown_show1 .countdown_section {width: 98%;}
+
+.countdown_show2 .countdown_section {width: 48%;}
+
+.countdown_show3 .countdown_section {width: 32.5%;}
+
+.countdown_show4 .countdown_section {width: 24.5%;}
+
+.countdown_show5 .countdown_section {width: 19.5%;}
+
+.countdown_show6 .countdown_section {width: 16.25%;}
+
+.countdown_show7 .countdown_section {width: 14%;}
+
+.countdown_section {
+	display: block;
+	float: left;
+	font-size: 75%;
+	text-align: center;
+ }
+
+.countdown_amount {
+	font-size: 200%;
+	color: red;
+	font-weight: bold;
+	font-style: normal;
+ }
+
+.countdown_descr {
+	display: block;
+	width: 100%;
+	color: black;
+	font-weight: bold;
+	font-style: normal;
+	line-height: 27px;
+	font-size: 20px;
+ }
+
+
+
+
+/* volunteer page*/

@@ -1,0 +1,349 @@
+<?php
+/**
+* Display help and module information
+* @param path which path of the site we're displaying help
+* @param arg array that holds the current path as would be returned from arg() function
+* @return help text for the path
+*/
+
+
+/**
+* Valid permissions for this module
+* @return array An array of valid permissions for the onthisdate module
+*/
+function isfpay_perm() {
+  return array('access session edit panels','access cashier','manage cashier');
+} 
+
+function isfpay_admin() {
+  $form = array();
+  
+    $form['tickets'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Tickets Settings'),
+    '#tree' => FALSE,
+	 '#collapsible' => TRUE,
+	'#collapsed' => FALSE,
+  );
+    
+	
+	$form['payment'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Payment Settings'),
+    '#tree' => FALSE,
+	'#collapsible' => TRUE,
+	'#collapsed' => TRUE,
+  );
+	
+	
+   $form['discount'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Discount Settings'),
+    '#tree' => FALSE,
+	 '#collapsible' => TRUE,
+	'#collapsed' => TRUE,
+  );
+  
+
+  $form['payment']['isfpay_user'] = array(
+    '#type' => 'textarea',
+    '#title' => t('מספר המסוף'),
+	'#resizable'=> FALSE,
+	'#rows' => 1,
+    '#default_value' => variable_get('isfpay_user', ''),
+    '#maxlength' => 10,
+    '#description' => t("מספר המסוף אליו מתבצעת הסליקה"),
+    '#required' => TRUE,
+  );
+
+   $form['payment']['isfpay_pass'] = array(
+    '#type' => 'textarea',
+    '#title' => t('סיסמאת המסוף'),
+	'#resizable'=> FALSE,
+	'#rows' => 1,
+    '#default_value' => variable_get('isfpay_pass', ''),
+    '#maxlength' => 500,
+    '#description' => t("סיסמאת המסוף אליו מתבצעת הסליקה"),
+    '#required' => TRUE,
+  );
+  
+   $form['payment']['ticket_mail'] = array(
+    '#type' => 'textarea',
+    '#title' => t('מייל כרטיסים'),
+	'#resizable'=> FALSE,
+	'#rows' => 1,
+    '#default_value' => variable_get('ticket_mail', 'IT@sf-f.org.il'),
+    '#maxlength' => 500,
+    '#description' => t("המייל אליו נשלחים אישורי כרטיסים"),
+    '#required' => TRUE,
+  );
+  
+ $form['payment']['sale_state'] = array(
+    '#type' => 'radios',
+    '#title' => t('מצב המכירה'),
+	'#resizable'=> FALSE,
+    '#default_value' => variable_get('sale_state', '0'),
+    '#required' => TRUE,
+	'#options' => array(t('סגורה'),t('פתוחה')),
+  );
+  
+  $form['tickets']['tickets_text'] = array(
+    '#type' => 'textarea',
+    '#title' => t('טקסט לדף יצירת הכרטיסים'),
+	'#resizable'=> TRUE,
+	'#rows' => 10,
+    '#default_value' => variable_get('tickets_text', ''),
+    '#maxlength' => 5000,
+    '#description' => t("טקסט לדף יצירת הכרטיסים"),
+    '#required' => TRUE, 
+  );
+
+  $form['tickets']['format'] = filter_form(2, NULL, array('tickets_text'));    
+
+  $form['tickets']['ticket_logo'] = array(
+    '#type' => 'select',
+    '#title' => t('מיקום תמונת הלוגו'),
+	'#resizable'=> TRUE,
+    '#default_value' => variable_get('ticket_logo', ''),
+	'#options' => array(
+        'logo-olamot-small.png' => t('עולמות'), 
+
+        'logo-icon-small.png' => t('אייקון'), 
+      ),
+    '#required' => TRUE,
+	'#description' => t("logo-olamot.png - עולמות, logo-icon-small.png - אייקון")
+  );
+    
+	$form['tickets']['ticket_footer'] = array(
+    '#type' => 'textarea',
+    '#title' => t('טקסט בתחתית הכרטיס'),
+	'#resizable'=> TRUE,
+	'#rows' => 10,
+    '#default_value' => variable_get('ticket_footer', ''),
+    '#maxlength' => 5000,
+    '#required' => TRUE,
+  );
+  
+
+
+  
+    $form['discount']['Minticket'] = array(
+    '#type' => 'textarea',
+    '#title' => t('מינימום כרטיסים להנחה'),
+	'#resizable'=> FALSE,
+	'#rows' => 1,
+    '#default_value' => (int)variable_get('Minticket',3),
+    '#maxlength' => 500,
+    '#description' => t("מספר הכרטיסים המינימלי עבורם מתקבלת הנחה"),
+    '#required' => FALSE,
+  ); 
+  
+       $form['discount']['MinDiscount'] = array(
+    '#type' => 'textarea',
+    '#title' => t('הנחה בסיסית'),
+	'#resizable'=> FALSE,
+	'#rows' => 10,
+    '#default_value' => (float)variable_get('MinDiscount',1),
+    '#maxlength' => 500,
+    '#description' => t("ההנחה בשקלים על ההזמנה עבור כפולה שלמה של מספר הכרטיסים המינימלי"),
+    '#required' => FALSE,
+  );
+ /* 
+    $form['discount']['Specialticket'] = array(
+    '#type' => 'textarea',
+    '#title' => t('כרטיס להנחה מיוחדת'),
+	'#resizable'=> FALSE,
+	'#rows' => 1,
+    '#default_value' => (int)variable_get('Specialticket',4),
+    '#maxlength' => 500,
+    '#description' => t("מספר הכרטיס עבורו מתקבלת הנחה מיוחדת"),
+    '#required' => FALSE,
+  );
+  
+    $form['discount']['SpecialDiscount'] = array(
+    '#type' => 'textarea',
+    '#title' => t('הנחה מיוחדת'),
+	'#resizable'=> FALSE,
+	'#rows' => 1,
+    '#default_value' => (float)variable_get('SpecialDiscount',0.5),
+    '#maxlength' => 500,
+    '#description' => t("ההנחה המיוחדת על הכרטיס המופיע בשדה למעלה. עבור הנחה של 10 אחוז יש להכניס 0.9"),
+    '#required' => FALSE,
+  );
+ */ 
+  
+     return system_settings_form($form);
+}
+
+function isfpay_admin_validate($form, &$form_state) {
+/*  $user = variable_get('isfpay_user');
+  var_dump($user); */
+  }
+
+function isfpay_menu() {
+  $items = array();
+  $items['admin/settings/isfpay'] = array(
+    'title' => t('Payment Settings'),
+    'description' => t('Payment Settings, including discounts.'),
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('isfpay_admin'),
+    'access arguments' => array('access administration pages'),
+    'type' => MENU_NORMAL_ITEM,
+   );
+   $items['basket'] = array(
+    'page callback' => 'isfpay_get_basket_ajax',
+    'type' => MENU_CALLBACK,
+    'access arguments' => array('access content'),
+  );
+  $items['payment'] = array(
+    'page callback' => 'isfpay_payment',
+    'type' => MENU_CALLBACK,
+    'access arguments' => array('access content'),
+  );  
+    $items['validation'] = array(
+    'page callback' => 'isfpay_validation',
+    'type' => MENU_CALLBACK,
+    'access arguments' => array('access content'),
+  ); 
+    
+return $items;
+}
+
+function isfpay_get_basket_ajax() {
+  $block = module_invoke('views', 'block', 'view', 'cod_schedule-block_2');
+  print $block['content'];
+}
+
+function isfpay_payment () {
+	global $base_url;
+	global $user;
+	
+	$cart = htmlspecialchars($_GET["cart"]);
+	$node = node_load($cart);
+	$sum= $node->field_price[0]['value'];
+	$ispaid= $node->field_ispaid[0]['value'];
+
+	if($sum==false) { //error with cart number
+		drupal_set_message("מספר ההזמנה שגוי! אנא העזר בלינק שנשלח אליך במייל");
+		drupal_goto('');  
+	}
+	/*
+	if($user->uid==71) { //test user
+		$sum=1;
+		$node->field_price[0]['value']=$sum;
+		node_save($node);
+		}
+	*/
+	if (($ispaid==1)|($sum==0))
+	{ //order already paid
+		drupal_set_message("ההזמנה שולמה");
+		drupal_goto('');  
+	}
+
+	$easycard_currency = 1;
+	$requestParams = array(
+		'ClientID' 	=> variable_get('isfpay_user',''),
+		'ECPwd' 	=> variable_get('isfpay_pass',''),
+		'Sum'       => $sum,
+		'MType'     => $easycard_currency,
+		'StateData' => $cart,
+		'Note' => ' תשלום עבור הזמנה ' . $cart . '  '. variable_get('site_name', 'מערכת כו"ד'),
+		'ReturnURLTrue' => 'http://www.iconfestival.com'.base_path().'validation'
+	);
+	$fields=http_build_query($requestParams, '', '&');
+	$easycard_url = 'https://secure.e-c.co.il/easycard/createform.asp?' . $fields;
+
+	drupal_goto($easycard_url);  
+}
+
+function isfpay_validation() {
+	$posted_values = array();
+	$nids=array();
+	$tickets=array();
+	$valid_order = TRUE;
+	$message = "Order confirmed";
+	$msg="<dir=ltr>";
+	$sql = "SELECT `realname` FROM `realname` Where `uid`=%d";
+	$query_result = db_query($sql,$GLOBALS['user']->uid);
+    $result = db_fetch_object($query_result);
+	$msg .= "שלום ".$result->realname. "<br>";
+	
+
+	if (count($_REQUEST))
+	{
+		$posted_values = $_REQUEST;
+		$cart = $posted_values['StateData'];
+		$paid_sum = $posted_values['Total'];
+		$auth = $posted_values['Code'];
+		$name = $posted_values['CardOwner'];
+		$node = node_load($cart);
+		$sum= $node->field_price[0]['value'];
+		if ($sum!=intval($paid_sum)) $valid_order = FALSE;
+		if (intval($auth)!=0) $valid_order = FALSE;
+		$sids = json_decode($node ->field_singups[0]['value']);	
+		 if ($valid_order === TRUE)
+		{
+			$msg .='הזמנתך  על סך'. $paid_sum .'אושרה  בהצלחה <br>';
+			foreach ($sids as &$sid)
+			{
+				$signup = signup_load_signup($sid);
+				$signup_data = unserialize($signup->form_data);
+				if (($signup_data['printed'] == -1))
+					{
+						$signup_data['printed']=0;
+					}
+					$signup->form_data = serialize($signup_data);
+					signup_save_signup($signup);
+					$unids[] = $signup->nid;
+					$mail = $signup->mail;
+					$mail.= ','.variable_get('ticket_mail', 'IT@sf-f.org.il');
+			}
+			$unids=array_count_values($unids);
+					
+			while($element = current($unids))
+			{
+				$nids[] = key($unids);
+				$tickets[] = $element;
+				next($unids);
+			}
+			unset($unids);
+				
+			for ($i=0;$i<count($nids);$i++) //replace with $signup->title
+			{
+			  $sql = "SELECT `title` FROM `node` WHERE `nid` = %d";
+			  $query_result = db_query($sql,$nids[$i]);
+			  $result = db_fetch_object($query_result);
+			  $title = $result->title;
+			  $msg .= "  עבור האירוע: ".$title." שולמו ".$tickets[$i]." כרטיסים <br>"; 
+			}
+			
+			$msg .= "ניתן יהיה לאסוף את הכרטיסים ביום הכנס בדוכן המודיעין <br>";		
+			
+			$from = 'codbot@iconfestival.com';
+			$params = array(
+				'body' => $msg,
+				'subject' => ' אישור תשלום על הזמנה ' . $cart . ' '. variable_get('site_name', 'מערכת כו"ד'),
+			);
+		   
+			   drupal_set_message($msg);
+			   if (drupal_mail('createtickets_myform', 'some_mail_key', $mail, language_default(), $params, $from, TRUE))
+				{	
+				drupal_set_message('An email has been sent to '.$mail);
+				} else {
+				drupal_set_message('There was an error sending your email','error');
+				}	
+				$node->field_ispaid[0]['value']=1;
+				$node ->field_name[0]['value'] =$name;
+				node_save($node);
+		}		
+				else
+				{
+				drupal_set_message('ארעה תקלה בהזמנתך. אנא שלח מייל ל '.variable_get('ticket_mail', 'IT@sf-f.org.il'),'error');
+				} 	 
+	}
+	drupal_goto('');  
+}
+
+
+
+

@@ -1,0 +1,63 @@
+<?php
+/**
+* Display help and module information
+* @param path which path of the site we're displaying help
+* @param arg array that holds the current path as would be returned from arg() function
+* @return help text for the path
+*/
+
+
+/**
+* Valid permissions for this module
+* @return array An array of valid permissions for the onthisdate module
+*/
+function isfcodapi_perm() {
+  return array('access session edit panels','access cashier','manage cashier');
+} 
+
+function isfcodapi_admin() {
+  $form = array();
+  return system_settings_form($form);
+}
+
+function isfcodapi_admin_validate($form, &$form_state) {
+/*  $user = variable_get('isfcodapi_user');
+  var_dump($user); */
+  }
+
+function isfcodapi_menu() {
+  $items = array();
+   $items['gettickets'] = array(
+    'page callback' => 'isfcodapi_get_tickets',
+    'type' => MENU_CALLBACK,
+    'access arguments' => array('access content'),
+  ); 
+  
+return $items;
+}
+
+// This needs to move to its own module. add the following functionalities:
+// 1. send one time login link
+// 2. get nid of flagged events
+// 3. flag nid
+
+
+function isfcodapi_get_tickets()
+{
+	$posted_values = $_REQUEST;
+	$mail = $posted_values['mail'];
+	$pass = $posted_values['pass'];
+	$user = user_load(array('mail'=> $mail)); 	
+	if ($user->pass == $pass) // test MD5 values
+	{
+		$results = db_query("SELECT nid FROM {signup_log} WHERE `uid`=%s", $user->uid);
+		while ($signup = db_fetch_object($results)) 
+		{
+			$signups[] = intval($signup->nid);
+		}
+		echo json_encode(($signups));	
+	}
+	else echo 'ERROR';
+}	
+
+

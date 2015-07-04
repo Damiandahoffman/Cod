@@ -1,0 +1,6 @@
+name = isfvbo
+description = Views Bulk Operation module for the  cod system for the Israeli Society of Science Fiction and Fantasy
+core = 6.x
+dependencies[] = views
+dependencies[] = signup
+package = ISSFF cod

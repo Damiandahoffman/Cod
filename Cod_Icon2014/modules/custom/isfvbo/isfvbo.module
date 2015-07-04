@@ -1,0 +1,320 @@
+<?php
+/**
+* Display help and module information
+* @param path which path of the site we're displaying help
+* @param arg array that holds the current path as would be returned from arg() function
+* @return help text for the path
+*/
+
+
+/**
+* Valid permissions for this module
+* @return array An array of valid permissions for the onthisdate module
+*/
+function isfvbo_perm() {
+  return array('access session edit panels','access cashier','manage cashier');
+} 
+
+function isfvbo_admin() {
+  $form = array();
+	// no admin menu required
+ /* $form['payment'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Payment Settings'),
+    '#tree' => FALSE,
+	 '#collapsible' => TRUE,
+	'#collapsed' => FALSE,
+
+  );*/ 
+     return system_settings_form($form);
+}
+
+function isfvbo_admin_validate($form, &$form_state) {
+/*  $user = variable_get('isfvbo_user');
+  var_dump($user); */
+  }
+
+function isfvbo_menu() {
+  $items = array();
+ 
+// no menu required
+/* $items['admin/settings/isfvbo'] = array(
+    'title' => t('Payment Settings'),
+    'description' => t('Payment Settings, including discounts.'),
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('isfvbo_admin'),
+    'access arguments' => array('access administration pages'),
+    'type' => MENU_NORMAL_ITEM,
+   ); */
+  
+return $items;
+}
+
+/*******************************************
+This is a VBO block. It should probably be moved to a different module at some point.
+******************************************/
+
+function isfvbo_action_info() {
+    $zs = 2;
+  return array(
+    'isfvbo_printtickets_action' => array(
+      'description' => t('הדפס כרטיסים'),
+      'type' => 'signup',
+      'configurable' => FALSE,
+      'aggregate' => TRUE,
+    ),
+	'isfvbo_aprovetickets_action' => array(
+      'description' => t('אשר כרטיסים'),
+      'type' => 'signup',
+      'configurable' => FALSE,
+      'aggregate' => TRUE,
+	  ),
+	'isfvbo_removeorder_action' => array(
+      'description' => t('בטל הזמנה'),
+      'type' => 'node',
+      'configurable' => FALSE,
+      'aggregate' => TRUE,
+	  ),
+	'isfvbo_aprovefreeticket_action' => array(
+      'description' => t('אשר כרטיס חינם'),
+      'type' => 'node',
+      'configurable' => FALSE,
+      'aggregate' => TRUE,
+	  ),
+	  'isfvbo_outquota_action' => array(
+      'description' => t('אשר מחוץ למכסה'),
+      'type' => 'node',
+      'configurable' => FALSE,
+      'aggregate' => TRUE,
+	  ),
+	  'isfvbo_printcart_action' => array(
+      'description' => t('הדפס הזמנה'),
+      'type' => 'node',
+      'configurable' => FALSE,
+      'aggregate' => TRUE,
+	  )
+	  
+  );
+}
+
+/**
+ * Action callbacks
+ *
+ * @param $signup
+ *   Reference to a fully-loaded signup object to cancel.
+ *
+ * @see signup_load_signup()
+ * @see signup_cancel_signup()
+ */
+function isfvbo_printtickets_action($signups,$whatelse) {
+    if ($signups != null && count($signups)>0)
+    {
+        $nonexistticket = array();
+        $blockedprint = array();
+        
+        foreach ($signups as $signupid)
+        {
+            $signup = signup_load_signup($signupid);
+            if ($signup->form_data == null)
+            {
+                $nonexistticket[] = $signupid;
+                continue;
+            }
+            
+            $signup_data = unserialize($signup->form_data);
+    
+            if (($signup_data['printed'] > 0) && !($user->uid == 1 || user_access('manage cashier')))
+            {
+                $blockedprint[] = $signupid;
+                continue;
+            }
+        }
+        
+        $retmsg = '';
+        if (count($nonexistticket)>0)
+             $retmsg .= 'כרטיסים לא קיימים: ' . implode(', ',$nonexistticket) . '<br/>';
+        
+        if (count($blockedprint)>0)
+            $retmsg .= "אין הרשאות להדפסת הכרטיסים: ". implode(', ',$blockedprint) . '<br/>';    
+        
+        if ($retmsg == '')
+        {
+            $s = implode('+',$signups);
+            drupal_set_message("<script>setTimeout('PrintTickets(\'$s\'),100')</script>הכרטיסים נשלחו להדפסה.");
+			$signup_data['printed']=$signup_data['printed']+1;
+			$signup->form_data = serialize($signup_data);
+			signup_save_signup($signup);
+        }    
+        else
+        {
+            drupal_set_message("הכרטיסים לא נשלחו להדפסה בגלל:<br/>".$retmsg,'error');
+            return(0);
+        }
+    }
+}
+
+
+function isfvbo_removeorder_action(&$object) 
+{
+   	
+	foreach($object as $cart)
+	{
+		$node = node_load($cart);
+		$sum= $node->field_price[0]['value'];
+		$paid = $node->field_ispaid[0]['value'];
+		$sids = json_decode($node ->field_singups[0]['value']);	
+		if ($paid)
+			{
+			drupal_set_message("לא ניתן לבטל הזמנות ששולמו! פנה למנהל",'error');
+			}
+		else
+			{
+			foreach ($sids as $sid)
+			{
+				signup_cancel_signup($sid);
+			}
+			node_delete($node->nid);
+			}
+	}
+}
+
+
+function isfvbo_printcart_action(&$object) 
+{
+   	
+	foreach($object as $cart)
+	{
+		$node = node_load($cart);
+		$sids = json_decode($node ->field_singups[0]['value']);	
+		foreach ($sids as $sid)
+		{
+		// confirm all tickets in the order
+			$signup = signup_load_signup($sid);
+				$signup_data = unserialize($signup->form_data);
+				if (($signup_data['printed'] == -1))
+					{
+						$signup_data['printed']=0;
+					}
+					$signup->form_data = serialize($signup_data);
+					signup_save_signup($signup);
+		}
+	$st = implode(' ',$sids); 
+  
+  // invoke the print popup when return to print the tickets
+  drupal_set_message("<script>setTimeout('PrintTickets(\'$st\'),100');</script>");
+  drupal_set_message(" הזמנה מספר  ". $cart . " נשלחה להדפסה ");
+  
+	}
+}
+
+function isfvbo_aprovefreeticket_action(&$object,$whatelse) 
+{
+	$nodes=$whatelse['node'];
+	foreach($nodes as $node)
+	{
+		$node=get_object_vars($node);
+		$signupform = array();
+		$signupform['uid'] =  $node['users_flag_content_uid'];
+		$signupform['signup_form_data']['printed'] = 0;
+		$signupform['signup_status'] = 1; //free
+		$signupform['nid'] = $node['nid'];
+		$sessionnode = node_load($node['nid']);
+		$limit = $sessionnode->signup_status_limit[1]['limit'];
+		$total = $sessionnode->signup_status_limit[1]['total'];
+		// add limit check, cause we can't trust anyone
+		if ($total+1<=$limit) 
+		{
+			$sid = signup_sign_up_user($signupform);
+			if ($sid == false)
+				{
+				drupal_set_message("כרטיס לארוע ". $node['nid']. "לא אושר כרטיס חינם.",'error');
+				}
+			else
+				{
+				drupal_set_message("כרטיס לארוע ". $node['nid'] ."אושר כרטיס חינם.");
+				} 			 
+		}
+		else {
+			drupal_set_message(" כרטיס חינם לאירוע ". $node['nid']. " לא אושר - אזלו הכרטיסים.  ",'error');
+			}
+	}
+		
+}
+
+
+function isfvbo_aprovetickets_action($signups,$whatelse) {
+    if ($signups != null && count($signups)>0)
+    {
+        $nonexistticket = array();
+        $blockedprint = array();        
+        foreach ($signups as $signupid)
+        {
+            $signup = signup_load_signup($signupid);
+            if ($signup->form_data == null)
+            {
+                $nonexistticket[] = $signupid;
+                continue;
+            }
+            
+            $signup_data = unserialize($signup->form_data);
+    
+            if (($signup_data['printed'] > 0) && !($user->uid == 1 || user_access('manage cashier')))
+            {
+                $blockedprint[] = $signupid;
+                continue;
+            }
+			if (($signup_data['printed'] == -1))
+			{
+				$signup_data['printed']=0;
+			}
+			$signup->form_data = serialize($signup_data);
+			signup_save_signup($signup);
+        }              
+    }
+}
+
+
+function isfvbo_outquota_action(&$object,$whatelse) 
+{
+	$nodes=$whatelse['node'];
+	foreach($nodes as $node)
+	{
+		$node=get_object_vars($node);
+		
+		$session_node = node_load($node['nid']);
+		$free = $session_node->signup_status_limit[1]['limit'];
+		$paid = $session_node->signup_status_limit[2]['limit'];
+		$free = $free+1;
+		$paid = $paid-1;
+		$session_node->signup_status_limit[1]['limit'] = strval($free);
+		$session_node->signup_status_limit[2]['limit'] = strval($paid);
+		var_dump($session_node->signup_status_limit[1]['limit']);
+		$session_node = node_submit($session_node);
+		node_save($session_node);	
+		node_load(FALSE, NULL, TRUE);		
+		$session_node = node_load($node['nid'],NULL, TRUE);
+		var_dump($free);
+		var_dump($session_node->signup_status_limit[1]['limit']);
+		break;
+		
+		$signupform = array();
+		$signupform['uid'] =  $node['users_flag_content_uid'];
+		$signupform['signup_form_data']['printed'] = 0;
+		$signupform['signup_status'] = 1; //free
+		$signupform['nid'] = $node['nid'];
+		$sid = signup_sign_up_user($signupform);
+			if ($sid == false)
+				{
+				drupal_set_message("כרטיס לארוע ". $node['nid']. "לא אושר כרטיס חינם.",'error');
+				}
+			else
+				{
+				drupal_set_message("כרטיס לארוע ". $node['nid'] ."אושר כרטיס חינם.");
+				} 			 
+	}
+		
+}
+
+/*******************************************
+End VOB block
+******************************************/

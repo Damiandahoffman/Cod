@@ -1,0 +1,4 @@
+name = isfcodapi
+description = API module for the ISSFF cod system
+core = 6.x
+package = ISSFF cod

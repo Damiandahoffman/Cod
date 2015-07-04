@@ -1,0 +1,1388 @@
+<?php
+/**
+* Display help and module information
+* @param path which path of the site we're displaying help
+* @param arg array that holds the current path as would be returned from arg() function
+* @return help text for the path
+*/
+
+/* require_once("pivottracker.inc");*/
+
+/* just for testing */
+function eran_help($path, $arg) {
+  $output = '';  //declare your output variable
+  switch ($path) {
+    case "admin/help#eran":
+      $output = '<p>'.  t("Displays links to nodes created on this date") .'</p>';
+      break;
+  }
+  return $output;
+} 
+
+/**
+* Valid permissions for this module
+* @return array An array of valid permissions for the onthisdate module
+*/
+function eran_perm() {
+  return array('access session edit panels','access cashier','manage cashier','free tickets');
+} 
+
+function eran_theme() {
+  return array(
+    'eran_pivottracker' => array(
+      'arguments' => array('project' => Null,'stories' => Null),
+      'template' => 'eran-pivottracker',
+    ),
+  );
+}
+
+function eran_menu_alter(&$items)
+{
+    unset($items['user/%user/contact']);
+    $items['node/%node/track']['access callback'] = 'user_access';
+    $items['node/%node/track']['access arguments'] = array('access session edit panels');
+    
+    $items['user/%user/view']['access callback'] = 'user_access';
+    $items['user/%user/view']['access arguments'] = array('access session edit panels');
+    
+    $items['user/%user/track']['access callback'] = 'user_access';
+    $items['user/%user/track']['access arguments'] = array('access session edit panels');
+
+    $items['user/%user/signups']['access callback'] = 'user_access';
+    $items['user/%user/signups']['access arguments'] = array('access session edit panels');
+    
+    $items['search/user']['access callback'] = 'user_access';
+    $items['search/user']['access arguments'] = array('access session edit panels');
+
+    $items['node/%node/signups/settings']['access callback'] = 'user_access';
+    $items['node/%node/signups/settings']['access arguments'] = array('manage cashier');
+
+}
+
+  function echo_memory_usage() {
+        $mem_usage = memory_get_usage(true);
+       
+        if ($mem_usage < 1024)
+            return $mem_usage." bytes";
+        elseif ($mem_usage < 1048576)
+            return round($mem_usage/1024,2)." kilobytes";
+        else
+            return round($mem_usage/1048576,2)." megabytes";
+    } 
+    
+function eran_block($op='list', $delta=0) {
+  // set up the block 
+    global $user;
+  $block = array();
+
+  if ($op == "list") {
+    // Generate listing of blocks from this module, for the admin/block page
+    $block[0]["info"] = t('Eran');
+  }
+  else if ($op == 'view') {
+    $profile = profile_load_profile($GLOBALS['user']);
+
+    $user = user_load($GLOBALS['user']->uid);
+   
+    $block['subject'] = 'פרטי משתמש';
+    $block_content = '';
+    $block_content .= "<div>שלום, <span title='$user->mail'>$user->name</span>". l(' (התנתק) ','logout') ."</div>";
+  
+    $block['content'] = $block_content;
+    return $block;
+    
+       // Generate our block content
+    // content variable that will be returned for display
+    $block_content = '';
+
+    // Get today's date
+    $today = getdate();
+
+    // calculate midnight one week ago
+    $start_time = mktime(0, 0, 0,$today['mon'], ($today['mday']), $today['year']);
+
+    // we want items that occur only on the day in question, so
+    //calculate 1 day
+    $end_time = $start_time + 86400;
+    // 60 * 60 * 24 = 86400 seconds in a day
+
+	
+	
+	$limitnum = variable_get("eran_maxdisp", 3);
+
+    $query = "SELECT nid, title, created, changed FROM " .
+           "{node} WHERE changed >= %d " .
+           "AND changed <= %d";
+
+    $query_result = db_query_range($query, $start_time, $end_time, 0, $limitnum);
+
+    while ($links = db_fetch_object($query_result)) {
+      $block_content .= l($links->title, 'node/'.$links->nid) . '<br />';
+    }
+
+    // Fill in the subject of our block which is the same whether or not
+    // the block has any real content
+    $block['subject'] = 'Eran';
+
+    // check to see if there was any content before returning
+    //  the block view
+    if ($block_content == '') {  
+       // no content from a week ago
+       $block['content'] = 'Sorry No Content';
+    }
+    else {
+		$options = array( "attributes" => array("title" => t("More events on this day.") ) );
+		$link = l( t("more"), "eran", $options );
+		$block_content .= "<div class=\"more-link\">" . $link . "</div>";    
+		// set up the block
+		$block['content'] = '  START  ' . $block_content . '  END  ';
+    }
+	$block['content']  .= '  [site_frontpage: ' . variable_get('site_frontpage','default') . ']';
+	
+  }
+
+  return $block;
+} 
+
+function eran_admin() {
+  $form = array();
+
+  $form['schedule'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Schedule Settings'),
+    '#tree' => FALSE,
+  );
+
+  $form['schedule']['cod_schedule_header_text'] = array(
+    '#type' => 'textarea',
+    '#title' => t('Schedule Header Text'),
+    '#default_value' => variable_get('cod_schedule_header_text', ''),
+    '#maxlength' => 500,
+    '#description' => t("This will appear above the Session Schedule."),
+    '#required' => FALSE,
+  );
+	$form['schedule']['format'] = filter_form(2, NULL, array('cod_schedule_header_text'));    
+
+
+  $form['schedule']['cod_schedule_footer_text'] = array(
+    '#type' => 'textarea',
+    '#title' => t('Schedule Footer Text'),
+    '#default_value' => variable_get('cod_schedule_footer_text', ''),
+    '#maxlength' => 500,
+    '#description' => t("This will appear below the Session Schedule for every day."),
+    '#required' => FALSE,
+  );
+
+  $form['schedule']['cod_schedule_show_extrasessions'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Schedule show extra sessions'),
+    '#default_value' => variable_get('cod_schedule_show_extrasessions', '0'),
+    '#description' => t("This will appear above the Session Schedule."),
+    '#required' => FALSE,
+  );
+
+  $form['schedule']['cod_schedule_show_download_program'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Schedule: Show Download Program'),
+    '#default_value' => variable_get('cod_schedule_show_download_program', '1'),
+    '#description' => t("Show download as word/pdf/open office links below the Session Schedule."),
+    '#required' => FALSE,
+  );
+
+  $form['schedule']['cod_daylightsaving'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Daylight saving'),
+    '#default_value' => variable_get('cod_daylightsaving', '0'),
+    '#maxlength' => 2,
+    '#description' => t("0 or 1 depends if daylight saving are in effect."),
+    '#required' => FALSE,
+  );
+  
+  return system_settings_form($form);
+}
+
+function eran_admin_validate($form, &$form_state) {
+ 
+}
+
+function eran_menu() {
+
+  $items = array();
+
+  $items['admin/settings/cod'] = array(
+    'title' => t('Cod Settings'),
+    'description' => t('COD Settings, including Program Schedule settings.'),
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('eran_admin'),
+    'access arguments' => array('access administration pages'),
+    'type' => MENU_NORMAL_ITEM,
+   );
+
+  $items['createtickets'] = array(
+    'title' => t('createtickets'),
+    'description' => t('createtickets page'),
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('createtickets_myform'),
+    'access arguments' => array('access content'),
+    'type' => MENU_NORMAL_ITEM,
+   );
+
+  $items['clearrequests'] = array(
+    'title' => t('clearrequests'),
+    'description' => t('clearrequests page'),
+    'page callback' => 'clearrequests',
+	'access arguments' => array('access content'),   
+   'type' => MENU_NORMAL_ITEM,
+   );
+
+  $items['ticketstatus'] = array(
+    'title' => t('ticketstatus'),
+    'description' => t('ticketstatus page'),
+    'page callback' => 'ticketstatus',
+    'access arguments' => array('access cashier'),
+    'type' => MENU_NORMAL_ITEM,
+   );
+   
+  $items['signupprint/%'] = array(
+    'title' => t('signupprint'),
+    'description' => t('signupprint page'),
+    'page callback' => 'signupprint',
+    'page arguments' => array(1),
+    'access arguments' => array('access cashier'),
+    'type' => MENU_NORMAL_ITEM,
+   );
+   
+     $items['eran/signupuser/%/%'] = array(
+    'title' => 'Signup User',
+    'page callback' => 'eran_signupuser',
+    'page arguments' => array(2,3),
+    'access callback' => 'user_access',
+    'access arguments' => array('administer flags'),
+    'type' => MENU_CALLBACK,
+  );
+  return $items;
+}
+
+function clearrequests()
+{
+    $items = flag_get_user_flags('node');
+    $flag = flag_get_flag('session_schedule');
+    foreach($items['session_schedule'] as $nid => $obj) {
+        $flag->flag('unflag', $nid);
+    }
+    drupal_set_message("הסל נוקה.");
+    drupal_goto('');
+}
+
+function ticketstatus()
+{
+    $sessions = array();
+    $query = "SELECT signup_log.nid, signup_log.status, SUM(count_towards_limit) as total, node.title, 
+            (SELECT status_limit FROM signup_status_limit_node_limit WHERE cid = 1 AND nid = signup_log.nid ) as freelimit,  
+            (SELECT status_limit FROM signup_status_limit_node_limit WHERE cid = 2 AND nid = signup_log.nid ) as paidlimit
+            FROM signup_log 
+            LEFT JOIN node ON node.nid = signup_log.nid
+            WHERE signup_log.status > 0
+            GROUP BY signup_log.status,signup_log.nid";
+
+    $query_result = db_query($query);
+    while ($result = db_fetch_object($query_result)) {
+        $node = node_load($result->nid);      
+        $result->startdate = SessionStartTime($node);
+        $sessions[date_timestamp_get($result->startdate)][$node->field_session_room[0]['nid'] . $result->status ]  = $result;
+    }
+    ksort($sessions);
+    $_SESSION['sessions'] = flatten($sessions);
+    return '';
+}
+
+// $node = loaded node with time nodes
+// returns: first date (Date object) 
+function SessionStartTime($node)
+{
+    // get the timeslot nodes from session
+    $timenodes = array();
+    foreach($node->field_session_slot as $timenode)
+    {
+        $timenodes[] = $timenode['nid'];
+    }
+
+    $timezoneoffset = variable_get('cod_daylightsaving', '0');
+    $timezonestring = ($timezoneoffset+2) . ' hours';
+
+    // get their real start time
+    $timeslots = array();
+    $timenodesst = implode(',',$timenodes);
+    $timeslotstitlesquery = "select field_slot_datetime_value as start, field_slot_datetime_value2 as end from content_type_time_slot where nid IN($timenodesst)";
+    $timequery_result = db_query($timeslotstitlesquery);
+    while ($timeslotresult = db_fetch_object($timequery_result)) {
+        $d =  date_make_date($timeslotresult->start);
+        date_add($d, date_interval_create_from_date_string($timezonestring));
+        $timeslots[] = $d;
+    }
+
+    // find lowest start time and return it
+    sort($timeslots);
+    return $timeslots[0];
+}
+
+function flatten(array $array) {
+    $return = array();
+    array_walk_recursive($array, function($a) use (&$return) { $return[] = $a; });
+    return $return;
+}
+
+
+function signupprint($args)
+{
+    if (!($user->uid == 1 || user_access('access cashier')))
+        return 'Access denied!';
+
+    $blockedprint = array(); 
+    $nonexistticket = array();
+    $ticketsarr = array();
+    
+    $signups = explode(' ',$args);
+    foreach ($signups as $signupid)
+    {
+        $signup = signup_load_signup($signupid);
+        if ($signup->form_data == null)
+        {
+            $nonexistticket[] = $signupid;
+            continue;
+        }
+        
+        $signup_data = unserialize($signup->form_data);
+
+        if (($signup_data['printed'] > 0) && !($user->uid == 1 || user_access('manage cashier')))
+        {
+            $blockedprint[] = $signupid;
+            continue;
+        }
+        $signup_data['printed'] += 1;
+        $signup->form_data = $signup_data;
+        signup_save_signup($signup);
+        watchdog('action', 'Ticket @signup_id print count '.$signup_data['printed'] , array('@signup_id' => $signup->sid));
+
+        $ticketsarr[$signupid]['lectures'] = array();
+        $ticketsarr[$signupid]['timeslots']= array();
+        $ticketsarr[$signupid]['sid'] = null;
+		$ticketsarr[$signupid]['member'] = $signup_data['member'];
+		$ticketsarr[$signupid]['status'] = $signup->status;
+		$query = "SELECT signup_log.*, node.title as session, realname.realname as lecture, node2.title room, node3.title timeslot, content_type_session.field_pricegroup_value as pricegroup
+            FROM `signup_log` signup_log
+            LEFT JOIN `node` node ON node.nid = signup_log.nid 
+            LEFT JOIN `content_field_speakers` content_field_speakers ON content_field_speakers.nid = signup_log.nid 
+            LEFT JOIN `realname` realname ON realname.uid = content_field_speakers.field_speakers_uid
+            LEFT JOIN `content_field_session_room` content_field_session_room on content_field_session_room.nid =  node.nid
+            LEFT JOIN `node` node2 ON node2.nid = content_field_session_room.field_session_room_nid
+            LEFT JOIN `content_field_session_slot` content_field_session_slot ON content_field_session_slot.nid = signup_log.nid 
+            LEFT JOIN `node` node3 ON node3.nid = content_field_session_slot.field_session_slot_nid 
+            LEFT JOIN `content_type_session` content_type_session ON content_type_session.nid = signup_log.nid 
+            WHERE `sid` = %d";
+        $query_result = db_query($query,$signupid);
+        while ($result = db_fetch_object($query_result)) {
+            if ($sid == null)
+            {
+                $ticketsarr[$signupid]['sid'] = $result->sid;  
+                $ticketsarr[$signupid]['nid'] = $result->nid;  
+                $ticketsarr[$signupid]['uid'] = $result->uid;  
+                $ticketsarr[$signupid]['session'] = $result->session;  
+                $ticketsarr[$signupid]['room'] = $result->room;  
+                $pricegroup = $result->pricegroup;  
+                $content_field = content_fields('field_pricegroup');
+                $allowed_values = content_allowed_values($content_field); 
+                $ticketsarr[$signupid]['price'] = $allowed_values[$pricegroup];
+                $ticketsarr[$signupid]['timeslot'] = date_format_date(SessionStartTime(node_load($result->nid)),'custom','d F H:i' );
+				
+            }
+            $ticketsarr[$signupid]['lectures'][]  = $result->lecture;  
+        }
+        $ticketsarr[$signupid]['lectures'] = array_unique($ticketsarr[$signupid]['lectures']);
+
+
+    }
+    
+    $_SESSION['ticketsarr'] = $ticketsarr; 
+
+    $retmsg = '';
+    if (count($nonexistticket)>0)
+         $retmsg .= 'כרטיסים לא קיימים: ' . implode(', ',$nonexistticket) . '<br/>';
+    
+    if (count($blockedprint)>0)
+        $retmsg .= "אין הרשאות להדפסת הכרטיסים: ". implode(', ',$blockedprint) . '<br/>';    
+    
+    return $retmsg;    
+}
+
+function createtickets_myform($form_state) {
+    $form = array();
+    $options = array('0'=>t('רגיל'),'1'=>t('חבר') );
+    $form['ismember'] = array(
+        '#type' => 'radios',
+        '#default_value' => 0,
+        '#options' => $options,
+    );
+   
+  $form['member_price'] = array('#type' => 'hidden', '#default_value' => '0');
+  $form['regular_price'] = array('#type' => 'hidden', '#default_value' => '0');
+  $form['final_price'] = array('#type' => 'hidden', '#default_value' => '0');
+
+	$o = flag_get_user_flags('node',NULL,$GLOBALS['user']->uid);
+    
+    $form['paidtickets'] = array(
+        '#type' => 'fieldset',
+        '#tree' => TRUE,
+    );
+    
+    $form['#ticketsarr'] = $o['session_schedule'];
+    if ($o['session_schedule'] != null)
+    {
+        
+		foreach ($o['session_schedule'] as $f)
+		{
+		
+			$form['paidtickets']['paidticket_'.$f->content_id] = array(
+				'#type' => 'textfield',
+				'#nodeid' => $f->content_id,
+				'#size' => 3,
+				'#maxlength' => 2,
+				'#default_value' => 0,
+			); 
+			
+			$form['paidtickets']['memberpaidticket_'.$f->content_id] = array(
+				'#type' => 'textfield',
+				'#nodeid' => $f->content_id,
+				'#size' => 3,
+				'#maxlength' => 2,
+				'#default_value' => 0,
+			); 
+
+		}
+	
+		if (($user->uid == 1 || user_access('access cashier')))
+		{    
+			$form['submit'] = array('#type' => 'submit', '#value' => 'הדפס כרטיסים','#submit' => array('createtickets_myform_submit'),'#validate' => 'createtickets_myform_validate');
+		}
+		
+		if (variable_get('sale_state', '0')==1)
+		{
+		$form['submit_two'] = array('#type' => 'submit', '#value' => 'המשך לתשלום','#submit' => array('createtickets_myform_submit_pay'));
+		}
+		
+		
+		if ((user_access('free tickets'))) 
+		{
+			$form['submit_free'] = array('#type' => 'submit', '#value' => 'בקשת כרטיסי חינם','#submit' => array('createtickets_myform_submit_free'));
+		}
+	}  
+    return $form;
+}
+
+function createtickets_myform_submit($form, &$form_state) {
+  if (!($user->uid == 1 || user_access('access cashier'))) {
+        drupal_set_message("Access denied!");
+		return 'Access denied!';
+  }
+  
+  $signupform = array();
+  $signupform['uid'] =  $GLOBALS['user']->uid;
+  $signupform['signup_form_data']['printed'] = 0;
+  $signupform['signup_status'] = 2; //paid
+  
+  $price = $form_state['values']['final_price'];
+  
+  
+  // create a credit payment option
+  
+	$easycard_currency = 1;
+	$requestParams = array(
+		'ClientID' 	=> variable_get('isfpay_user',''),
+		'ECPwd' 	=> variable_get('isfpay_pass',''),
+		'Sum'       => $price,
+		'MType'     => $easycard_currency,
+		'Note' => ' תשלום אשראי בקופת הכנס ' . variable_get('site_name', 'מערכת כו"ד'),
+	);
+	$fields=http_build_query($requestParams, '', '&');
+	$easycard_url = 'https://secure.e-c.co.il/easycard/createform.asp?' . $fields;
+  
+  
+  $sids = array();
+  $ticketsprinted = 0;
+  foreach (  $form['#ticketsarr'] as $session )
+  {
+
+		// seperate the loop to member and non member tickets
+		
+		  $ticketsnum = $form_state['values']['paidtickets']['paidticket_'.$session->content_id];
+		  $membernum = $form_state['values']['paidtickets']['memberpaidticket_'.$session->content_id];
+		  $ticketsapprove = $ticketsnum+$membernum;
+		  $signupform['signup_form_data']['member'] = 0;   //as default - set non member
+	  
+      for ($i=0;$i<$ticketsapprove;$i++)
+      {
+		if ($i<$membernum) //check if this is a member ticket - if so, set as member and reduce price
+			{
+				$signupform['signup_form_data']['member'] = 1;
+			}
+        $signupform['nid'] = $session->content_id;
+        $sid = signup_sign_up_user($signupform);
+        if ($sid == false)
+        {
+            drupal_set_message("כרטיס לארוע $session->content_id לא הודפס - אין מקומות פנויים.",'error');
+        }
+        else
+        {
+            $sids[] = $sid;
+            $ticketsprinted++;
+        }
+      }
+  }
+  $st = implode(' ',$sids); 
+  
+  // invoke the print popup when return to print the tickets
+  drupal_set_message("<script>setTimeout('PrintTickets(\'$st\'),100');</script>הכרטיסים נשלחו להדפסה.");
+  
+  // clear the basket
+  $items = flag_get_user_flags('node');
+  $flag = flag_get_flag('session_schedule');
+  foreach($items['session_schedule'] as $nid => $obj) {
+      $flag->flag('unflag', $nid);
+  }
+  drupal_set_message("הסל נוקה.");
+  
+  // report and go to main page      
+  drupal_set_message("<h2> $ticketsprinted כרטיסים נוצרו בהצלחה. </h2>");
+  drupal_set_message("<h3> <a href = javascript:PrintTickets('')> להדפסה חוזרת </a> <h3>");
+  drupal_set_message("<h2> הסכום הכולל לתשלום :$price שקלים. </h2>");
+  drupal_set_message("<h2> <a href =$easycard_url target = '_blank'> לתשלום באשראי </a>  </h2>");
+
+  
+  drupal_goto("");
+}
+
+/**
+* Create the hook_mail function
+* Required in Drupal 6
+*/
+
+function createtickets_myform_mail($key, &$message, $params) {
+  $headers = array(
+    'MIME-Version' => '1.0',
+    'Content-Type' => 'text/html; charset=UTF-8; format=flowed',
+    'Content-Transfer-Encoding' => '8Bit',
+    'X-Mailer' => 'Drupal'
+  );
+  foreach ($headers as $key => $value) {
+    $message['headers'][$key] = $value;
+  }
+  $message['subject'] = $params['subject'];
+  $message['body'] = $params['body'];
+}
+
+
+function createtickets_myform_submit_pay($form, &$form_state) {
+	
+	if (count($form['#ticketsarr'])==0)
+	{
+	drupal_set_message("אנא הוסף כרטיסים לסל",'error');
+	drupal_goto('');
+	}
+	
+	$signupform = array();
+	$signupform['uid'] =  $GLOBALS['user']->uid;
+	$signupform['signup_form_data']['printed'] = -1;
+	$signupform['signup_status'] = 2; //paid
+		
+	$sids = array();
+	$prices = array();
+	$ticketsprinted = 0;
+	$msg="<dir=ltr>";
+	$totalprice= 0 ;
+	
+	$sql = "SELECT `realname` FROM `realname` Where `uid`=%d";
+	$query_result = db_query($sql,$GLOBALS['user']->uid);
+    $result = db_fetch_object($query_result);
+	$ismember = $form_state['values']['ismember'];
+	$priceregular = $form_state['values']['regular_price'];
+	$pricemember = $form_state['values']['member_price'];
+	
+	//get flagged items for basket clearing
+	$items = flag_get_user_flags('node');
+	$flag = flag_get_flag('session_schedule');
+  	
+	
+	$msg .= "שלום ".$result->realname. "<br>";
+	$err_msg = $msg;
+	  foreach ($form['#ticketsarr'] as $session )
+	  {
+		  $sql = "SELECT `title` FROM `node` WHERE `nid` = %d";
+		  $query_result = db_query($sql,$session->content_id);
+		  $result = db_fetch_object($query_result);
+		  $title = $result->title;
+		  
+		  $ticketsnum = $form_state['values']['paidtickets']['paidticket_'.$session->content_id];
+		  $membernum = $form_state['values']['paidtickets']['memberpaidticket_'.$session->content_id];
+		  $ticketsapprove = $ticketsnum+$membernum;
+		  $signupform['nid'] = $session->content_id;
+		  $signupform['signup_form_data']['printed'] = -1; //set an unpaid flag until billing is confirmed
+		  $signupform['signup_form_data']['member'] = 0;   //as default - set non member
+		  
+		    
+		  
+		  $sql = "SELECT `field_pricegroup_value` FROM `content_type_session` WHERE `nid` = %d";
+		  $query_result = db_query($sql,$session->content_id);
+		  $result = db_fetch_object($query_result);
+		  $pricegroup = $result->field_pricegroup_value;  
+          $content_field = content_fields('field_pricegroup');
+          $allowed_values = content_allowed_values($content_field); 
+          $price = $allowed_values[$pricegroup];
+		  
+		//  if ($price>0){$price=$price-10*$ismember;}
+		  
+		  if ($price==0){$signupform['signup_form_data']['printed'] = 0;}; //all free sessions are approved - no need to approve
+			
+		  $err=0;
+		  $sessionnode = node_load($session->content_id);
+		  $limit = $sessionnode->signup_status_limit[2]['limit'];
+          $total = $sessionnode->signup_status_limit[2]['total'];
+		  $totaltick = $ticketsnum+$membernum;
+		  
+		if (($total+$ticketsnum+$membernum)>$limit)
+			{
+			$ticketsapprove=$limit-$total;
+			$membernum=$ticketsapprove-$ticketsnum;
+			if ($membernum<0) $membernum=0;
+			$err=1;
+			}
+					
+		  for ($i=0;$i<$ticketsapprove;$i++) //go over all tickets - member first
+			{
+			$price = $allowed_values[$pricegroup];
+			if ($i<$membernum) //check if this is a member ticket - if so, set as member and reduce price
+			{
+				$signupform['signup_form_data']['member'] = 1;
+//				Modified for Meorot 2014 - Probably should be a variable from payment module - need to change both here and in the creates_tickets_myform
+				if ($price>0) $price=$price-10;		
+//				if ($price>0) $price=$price-5;		
+
+			}
+			else {
+				$signupform['signup_form_data']['member'] = 0;
+			}
+				
+			$sid = signup_sign_up_user($signupform);
+			if ($sid == false)
+				{
+				$ticketsapprove=$ticketsapprove-1;
+				$err=1;
+				}
+			else
+				{
+				if ($price>0)
+				{
+					$prices[]=$price;
+				} //only calculate discounts for non-free  approved events
+				$sids[] = $sid;
+				} 
+			} 
+		  if ($err == 1)
+			{
+				$err_msg .= " שים לב! עבור האירוע ".$title." ניתן היה להזמין רק ".$ticketsapprove." כרטיסים מתוך ". $totaltick." <br>";
+			}
+		  else 
+		  {
+			$msg .= "  עבור האירוע: ".$title." הוזמנו ".$ticketsapprove." כרטיסים מתוך ". $totaltick ." <br>";
+			//clear the session from the basket - only if tickets were approved!
+			if ($totaltick>0) 
+			{
+				$flag->flag('unflag', $session->content_id);	
+			}
+		  }
+		 
+	  }
+		
+		 //calculate price after discount - I really hate this. I have to write it both in JS and in php just in case some of the tickets aren't approved. god, I really hate this.				
+		$Minticket =variable_get(Minticket,3);
+		$MinDiscount = variable_get(MinDiscount,1);
+		$discount = 0;
+		
+		if( count($prices)>0)
+		{
+			$MinDiscount = min(min($prices),$MinDiscount);
+		}	
+		$discount = $MinDiscount*floor(count($prices)/$Minticket);
+		$totalPriceDisc = 0;
+		$n=count($prices);
+		for( $i=0; $i < $n; $i++)
+		{ 
+			$totalPriceDisc=$totalPriceDisc + $prices[$i];
+		}
+		$totalPriceDisc = $totalPriceDisc - $discount;
+		 //create cart node and save the signups and price
+		 
+	  if( ! function_exists("node_object_prepare")) {
+      include_once(drupal_get_path('module', 'node') . '/node.pages.inc');
+   }
+   	
+		$new_node = new stdClass();
+		$new_node->type = 'cart';
+		node_object_prepare($new_node);
+		$sids = json_encode($sids);
+		$new_node ->field_price[0]['value'] = ($totalPriceDisc);
+		$new_node ->field_singups[0]['value'] = $sids;
+		$new_node ->field_ispaid[0]['value'] =0;
+		$new_node ->field_name[0]['value'] ="טרם שולם";
+		
+		node_save($new_node);
+		$cart=$new_node->nid;
+		$paylink = base_path().'payment?cart='.$cart;	
+
+	if ($totalPriceDisc>0)
+		{
+	  $paylink='"'.$paylink.'"';
+  	  $err_msg .= " הסכום הנדרש לתשלום הינו: ".$totalPriceDisc.' ש"ח <br> <br>';
+	  $err_msg .= ' <h2 style="color:red"> לתשומת ליבך, הכרטיסים ישמרו רק לאחר סיום התשלום </h2>   <br>';
+	  $err_msg .= ' סיכום ההזמנה נשלחה לדוא"ל שלך, תוכל למצוא שם לינק לתשלום או לשלם עכשיו. <br>';
+	  $err_msg .= '<a href='.$paylink.'target="_blank">המשך לתשלום</a><br>';
+	  $err_msg .= 'מספר ההזמנה שלך הינו: '.$cart. " אנא שמור אותו לצורכי בירור. <br> ";
+	  $msg .=$err_msg;
+	  $msg .= 'אם כבר שילמת, יש להתעלם מדואל זה. <br>';
+		}
+	if ($totalPriceDisc==0)
+	{
+		$new_node ->field_ispaid[0]['value'] =1;
+		$new_node ->field_name[0]['value'] ="הזמנת חינם";
+		$err_msg .= ' הזמנת חינם אושרה <br>';
+	}
+	drupal_set_message("<h2>" . print_r($err_msg,1) . "</h2>");
+	 
+	$valid_email = $GLOBALS['user']->mail;
+	$valid_email.=" ,".variable_get('ticket_mail', 'IT@sf-f.org.il');
+    $from = 'codbot@iconfestival.com';
+    $params = array(
+    'body' => $msg,
+    'subject' => ' סיכום הזמנה מספר ' . $cart . ' '.variable_get('site_name', 'מערכת כו"ד'),
+      );
+    
+	if (drupal_mail('createtickets_myform', 'some_mail_key', $valid_email, language_default(), $params, $from, TRUE))
+    {
+        drupal_set_message('An email has been sent to '.$valid_email);
+    } else {
+        drupal_set_message('There was an error sending your email','error');
+    }
+
+ // clear the basket
+ // $items = flag_get_user_flags('node');
+ // $flag = flag_get_flag('session_schedule');
+ // foreach($items['session_schedule'] as $nid => $obj) {
+ //     $flag->flag('unflag', $nid);
+ // }
+	
+drupal_goto(""); 
+  
+}
+
+
+function createtickets_myform_validate_two($form, &$form_state) {
+  if ($form['#ticketsarr'] == null || count($form['#ticketsarr']) == 0 )
+  {
+    form_set_error('signup_status', 'לא נבחרו כרטיסים ליצירה!');
+    return;
+  }
+  
+  $ticketsprinted = 0;
+  foreach (  $form['#ticketsarr'] as $session )
+  {
+      $ticketsnum = $form_state['values']['paidtickets']['paidticket_'.$session->content_id]+$form_state['values']['paidtickets']['memberpaidticket_'.$session->content_id];
+      $ticketsprinted += $ticketsnum;
+      $sessionnode = node_load($session->content_id);
+      $limit = $sessionnode->signup_status_limit[2]['limit'];
+      $total = $sessionnode->signup_status_limit[2]['total'];
+      $qty = $ticketsnum;
+      if ( $total + $qty > $limit)
+      {
+          form_set_error('signup_status', t("לארוע $sessionnode->title אין מספיק מקומות פנויים! מקומות נשארו: ") . ($limit - $total));
+      }
+  }
+  if ($ticketsprinted == 0)
+  {
+    form_set_error('signup_status','לא נבחרו כרטיסים ליצירה!');
+  }  
+}
+
+
+function createtickets_myform_validate($form, &$form_state) {
+  if ($form['#ticketsarr'] == null || count($form['#ticketsarr']) == 0 )
+  {
+    form_set_error('signup_status', 'לא נבחרו כרטיסים ליצירה!');
+    return;
+  }
+  
+  $ticketsprinted = 0;
+  foreach (  $form['#ticketsarr'] as $session )
+  {
+      $ticketsnum = $form_state['values']['paidtickets']['paidticket_'.$session->content_id]+$form_state['values']['paidtickets']['memberpaidticket_'.$session->content_id];
+      $ticketsprinted += $ticketsnum;
+      $sessionnode = node_load($session->content_id);
+      $limit = $sessionnode->signup_status_limit[2]['limit'];
+      $total = $sessionnode->signup_status_limit[2]['total'];
+      $qty = $ticketsnum;
+      if ( $total + $qty > $limit)
+      {
+          form_set_error('signup_status', t("לארוע $sessionnode->title אין מספיק מקומות פנויים! מקומות נשארו: ") . ($limit - $total));
+      }
+  }
+  if ($ticketsprinted == 0)
+  {
+    form_set_error('signup_status','לא נבחרו כרטיסים ליצירה!');
+  }  
+}
+
+
+function createtickets_myform_submit_free($form, &$form_state) 
+{
+//This does nothing, but the volunteers tend to be too stupid to just do nothing, so we give them a button to push. Hooray to stupidity.
+	drupal_set_message('ההזמנה נשלחה! אין לנקות את הסל!');
+	drupal_goto(""); 
+}
+
+
+function eran_signupuser($uid, $nid) {
+    $signup_form = array();
+    $signup_form['nid'] = $nid;
+    $signup_form['uid'] = $uid;
+    signup_sign_up_user($signup_form, FALSE, TRUE);          
+    drupal_goto();
+}
+
+
+function eran_views_embed_form() {
+    return array(
+        // Key in this array is the name of a form and also the name of a form function.
+        'signup_form' => t('Signup form')
+        );
+}
+
+function CreateSessionProduct($session_node)
+{
+    // setup the new event object
+    $newNode = (object) NULL;
+    $newNode->type = 'event';
+    $newNode->title = 'פריט ארוע '.$session_node->title;
+    $newNode->model = 'SessionItem' . $session_node->nid;
+    $newNode->sell_price = 0;
+    $newNode->pkg_qty = 1;
+    $newNode->default_qty = 1;
+    $newNode->language = 'he';
+    $newNode->uid = $session_node->uid;
+
+    // get room capacity for later
+    $room_node = node_load($session_node->field_session_room[0]['nid']);
+    $capacity =  $room_node->field_room_capacity[0]['value'];
+    
+    // add CCK field data
+    $timeslot_node = node_load($session_node->field_session_slot[0]['nid']);
+    $newNode->field_dates[0]['value'] = $timeslot_node->field_slot_datetime[0]['value'];
+    $newNode->field_dates[0]['value2'] = $timeslot_node->field_slot_datetime[0]['value2'];
+    $newNode->field_dates[0]['timezone'] = $timeslot_node->field_slot_datetime[0]['timezone'];
+    $newNode->field_dates[0]['timezone_db'] = $timeslot_node->field_slot_datetime[0]['timezone_db'];
+    $newNode->field_dates[0]['date_type'] = $timeslot_node->field_slot_datetime[0]['date_type'];
+    
+    // save node
+    node_save($newNode);
+    
+    // link session and event
+    $session_node->field_event_ref[0]['nid'] = $newNode->nid;
+    node_save($session_node);
+    
+    // set close_signup_limit to be the same as the room capacity for starting value
+    db_query("UPDATE {signup} SET close_signup_limit = %d WHERE nid = %d", $capacity, $newNode->nid);
+    
+    db_query("INSERT IGNORE INTO {uc_product_attributes} (nid, aid, label, ordering, required, display, default_option) SELECT %d, aid, label, ordering, required, display, default_option FROM {uc_class_attributes} WHERE pcid = '%s'", $newNode->nid, $newNode->type);
+    db_query("INSERT IGNORE INTO {uc_product_options} (nid, oid, cost, price, weight, ordering) SELECT %d, oid, cost, price, weight, ordering FROM {uc_class_attribute_options} WHERE pcid = '%s'", $newNode->nid, $newNode->type);
+
+    $eventNode = node_load($newNode->nid);  
+    node_save($eventNode);
+    return (true);
+}
+
+function SessionCreated($session_node)
+{
+    $s = 2;    
+    $room_node = node_load($session_node->field_session_room[0]['nid']);
+    $capacity =  $room_node->field_room_capacity[0]['value'];
+    
+        // node just created and doesn't have any limits, add them
+        
+        $free = round($capacity * 0.2);
+        $paid = $capacity - $free;
+        
+        $session_node->signup_status_limit[1]['limit']  = $free;
+        $session_node->signup_status_limit[2]['limit']  = $paid;
+        $session_node->signup_status_limit_type = 'status';
+        //node_save($session_node);
+        
+        // Insert the records into the DB so this node uses those defaults.
+        db_query("DELETE FROM {signup_status_limit_node_setting} WHERE nid = %d", $session_node->nid);
+        db_query("INSERT INTO {signup_status_limit_node_setting} (nid, limit_type) VALUES (%d, '%s')", $session_node->nid, $session_node->signup_status_limit_type);
+        db_query("INSERT INTO {signup_status_limit_node_limit} (nid, cid, status_limit) VALUES (%d, %d, %d)", $session_node->nid, 1,$free);
+        db_query("INSERT INTO {signup_status_limit_node_limit} (nid, cid, status_limit) VALUES (%d, %d, %d)", $session_node->nid, 2,$paid);
+    //} 
+}
+
+function eran_nodeapi(&$node, $op, $a3 = NULL, $a4 = NULL) {
+  switch ($op) {
+    case 'insert':
+      if ($node->type == "session")
+      {
+        //CreateSessionProduct($node);
+        SessionCreated($node);
+      }
+      break;
+   case 'load':
+      if ($node->type == "session")
+      {
+      }
+      break;
+  }
+}
+
+
+
+/**
+ * Provides a default example handler for the User Points module.
+ */
+function eran_handler($op, $uid, $total = NULL) {
+    if ($uid == 0) { return 0; }
+    
+    switch ($op) {
+
+        case 'user_total':
+        case 'add': //do we have a need for add?? just return the countn for now.
+          if ($uid == 0) 
+            return 0;
+
+          $user = user_load($uid);
+          if (isset($user->profile_credits))
+            return(intval($user->profile_credits));
+          else
+            return 0;
+          
+        case 'subtract':
+            $user = user_load($uid);
+            if (isset($user->profile_credits))
+            {
+                $edit['profile_credits'] = intval($user->profile_credits) - $total;
+                eran_save_profile($edit, $user, "Personal information");
+            }
+          return intval($user->profile_credits - $total);
+    
+      }       
+}
+
+// your custom profile saving function
+function eran_save_profile(&$edit, &$user, $category, $register = FALSE){
+  $result = _profile_get_fields($category, $register);
+  while ($field = db_fetch_object($result)) {
+    if(isset($edit[$field->name])){
+      if (_profile_field_serialize($field->type)) {
+        $edit[$field->name] = serialize($edit[$field->name]);
+      }
+      db_query("DELETE FROM {profile_values} WHERE fid = %d AND uid = %d", $field->fid, $user->uid);
+      db_query("INSERT INTO {profile_values} (fid, uid, value) VALUES (%d, %d, '%s')", $field->fid, $user->uid,  $edit[$field->name]);
+    }
+    // Mark field as handled (prevents saving to user->data).
+    $edit[$field->name] = NULL;
+  }
+}
+
+
+
+/***************************************************************************************************/
+/*                          
+/***************************************************************************************************/
+
+/* this makes the singup module use the order "qty" field, very important */
+function eran_signup_data_alter($signup, $signup_form)
+{
+    if (isset( $signup_form['qty']) &&  $signup_form['qty'] != '')
+        $signup->count_towards_limit = $signup_form['qty'];
+}
+
+
+/***************************************************************************************************/
+/*                                  Alter Forms                          
+/***************************************************************************************************/
+
+
+function eran_form_alter(&$form, &$form_state, $form_id) {
+  //drupal_set_message("Form ID: " . $form_id);
+  if ($form_id == 'session_node_form') {
+    
+    // hide vertical tabs group:
+    if (!user_access('access session edit panels'))
+    {
+        $form['hide_vertical_tabs'] = array('#type' => 'markup', '#value' => '<div><style type="text/css">div.vertical-tabs { display:none !important;}</style></div>');
+    }
+    
+  }
+  else if ($form_id == 'event_node_form')
+  { 
+    // hide vertical tabs group:
+    if (!user_access('access session edit panels'))
+    {
+        $form['hide_vertical_tabs'] = array('#type' => 'markup', '#value' => '<div><style type="text/css">div.vertical-tabs { display:none !important;}</style></div>');
+    }
+     
+  }
+  else if ($form_id == 'signup_edit_form')
+  {
+    $form['cancel-signup'] = $form['elements']['cancel-signup'];
+    unset($form['elements']);
+  }
+  else if ($form_id == 'signup_form')
+  { 
+    if (!isset($form['collapse']['submit']))
+        return;
+        
+    if (isset($_REQUEST['u']) && $_REQUEST['u']!='')
+    {
+        $user = user_load($_REQUEST['u']);
+        $form['collapse']['signup_user_form']['signup_username']['#default_value']=$user->name;
+    }
+    
+    $form['collapse']['qty'] = array(
+        '#type' => 'textfield',
+        '#title' => t('Number of tickets'),
+        '#size' => 30,
+        '#maxlength' => 4,
+        '#default_value' => 1,
+        '#weight' => 1,
+      );
+      
+      $form['collapse']['signup_form_data']['printed'] = array(
+        '#type' => 'checkbox',
+        '#title' => t('Printed'),
+        '#default_value' => 0,
+        '#weight' => 1,
+      );
+	  
+	  $form['collapse']['signup_form_data']['member'] = array(
+        '#type' => 'checkbox',
+        '#title' => t('כרטיס חבר'),
+        '#default_value' => 0,
+        '#weight' => 2,
+      );
+	  
+      
+      $form['collapse']['submit']['#weight'] = 3;  
+      $form['#submit'][0] = 'eran_signup_form_submit';
+      $form['#validate'][0] = 'eran_signup_form_validate';
+  }
+   if ($form_id === 'profile_node_form') {
+    
+      unset($form['title']);
+      unset($form['htmlmail']);
+      unset($form['theme_select']);
+      unset($form['field_birthdate']);
+      unset($form['field_phone1']);
+      unset($form['field_phone2']);
+      unset($form['field_id']);
+      unset($form['field_city']);
+      unset($form['field_street']);
+      unset($form['field_apartment_num']);
+      unset($form['field_zipcode']);
+      unset($form['field_aguda_num']);
+      unset($form['field_aguda_join']);
+      unset($form['field_price']);
+      unset($form['field_payment_type']);
+      unset($form['field_payment_location']);
+      unset($form['field_volunteer_types']);
+      unset($form['field_monthly_mail']);
+      unset($form['nodetemplate']);
+
+      if ($form['#action'] == '/cod/user/register')
+      {
+      } 
+      else if ($form['#action'] == '/cod/admin/user/user/create')
+      {
+            //$form['account']['mail'];
+            
+      }
+      
+      if (!user_access('access session edit panels'))
+      {
+        $form['hide_vertical_tabs'] = array('#type' => 'markup', '#value' => '<div><style type="text/css">div.vertical-tabs { display:none !important;}</style></div>');
+      }
+    }
+    if ($form_id === 'user_register') {
+          $asd = 2;
+          if ($form['#action'] == '/cod/user/register')
+          {
+          } 
+          else if ($form['#action'] == '/cod/admin/user/user/create')
+          {
+                //$form['account']['mail'];
+                
+          }
+    }
+}
+
+function eran_signup_form_validate($form, $form_state) {
+  $nid = $form_state['values']['nid'];
+  $anon_mail = $form_state['values']['signup_anon_mail'];
+  
+  $selStatus = $form['collapse']['signup_status']['#value'];
+  $limit = $form['#parameters'][2]->signup_status_limit[$selStatus]['limit'];
+  $total = $form['#parameters'][2]->signup_status_limit[$selStatus]['total'];
+  $qty =  $form_state['values']['qty'];
+  if ( $total + $qty > $limit)
+      form_set_error('signup_status', t('Not enough tickets to sell! Maximum avaialbe is ') . ($limit - $total));
+	  
+  $account = user_load(array('name' => $form_state['values']['signup_username']));
+  
+  if (!($account))
+  {
+	form_set_error('signup_status', t('שם משתמש לא נמצא ')) ;
+  }  
+	  
+}
+
+function eran_signup_form_submit($form, &$form_state)
+{
+      if (isset($form_state['values']['signup_username'])) {
+        $account = user_load(array('name' => $form_state['values']['signup_username']));
+        $form_state['values']['uid'] = $account->uid;
+      }
+      
+      $form_state['values']['signup_form_data']['printed'] = $form_state['values']['printed'];
+      unset($form_state['values']['printed']);
+      
+      $tickets =  $form_state['values']['qty'];
+      unset($form_state['values']['qty']);
+      
+      for ($i=0;$i<$tickets;$i++)
+      {
+        signup_sign_up_user($form_state['values']);
+      }
+      
+}
+
+
+function eran_automodal_alter(&$settings, $selector) {
+  if ($selector == '.automodal') {
+    $settings['automodalReload'] = TRUE;
+  }
+}
+
+
+/*******************************************
+This is a VBO block. It uses the isfvbo module. the functions are declared here only to avoid going over the entire site and changing buttons.
+******************************************/
+
+function eran_action_info() {
+    $zs = 2;
+  return array(
+    'eran_printtickets_action' => array(
+      'description' => t('הדפס כרטיסים'),
+      'type' => 'signup',
+      'configurable' => FALSE,
+      'aggregate' => TRUE,
+    ),
+	'eran_aprovetickets_action' => array(
+      'description' => t('אשר כרטיסים'),
+      'type' => 'signup',
+      'configurable' => FALSE,
+      'aggregate' => TRUE,
+	  ),
+	'eran_removeorder_action' => array(
+      'description' => t('בטל הזמנה'),
+      'type' => 'node',
+      'configurable' => FALSE,
+      'aggregate' => TRUE,
+	  ),
+	'eran_aprovefreeticket_action' => array(
+      'description' => t('אשר כרטיס חינם'),
+      'type' => 'node',
+      'configurable' => FALSE,
+      'aggregate' => TRUE,
+	  ),
+	  'eran_outquota_action' => array(
+      'description' => t('אשר מחוץ למכסה'),
+      'type' => 'node',
+      'configurable' => FALSE,
+      'aggregate' => TRUE,
+	  )
+  );
+}
+
+/**
+ * Action callback to cancel a given signup.
+ *
+ * @param $signup
+ *   Reference to a fully-loaded signup object to cancel.
+ *
+ * @see signup_load_signup()
+ * @see signup_cancel_signup()
+ */
+function eran_printtickets_action($signups,$whatelse) 
+	{
+    isfvbo_printtickets_action($signups,$whatelse);
+	}
+	
+function eran_removeorder_action(&$object) 
+{
+	isfvbo_removeorder_action(&$object);    	
+}
+
+function eran_aprovefreeticket_action(&$object,$whatelse) 
+{
+	isfvbo_aprovefreeticket_action(&$object,$whatelse);
+}
+
+function eran_aprovetickets_action($signups,$whatelse) 
+{
+	isfvbo_aprovetickets_action($signups,$whatelse);
+}
+
+
+function eran_outquota_action(&$object,$whatelse) 
+{
+	isfvbo_outquota_action(&$object,$whatelse);
+}
+
+/*******************************************
+End VOB block
+******************************************/
+
+function views_views_pre_execute(&$view) {
+  if ( $view->name == 'signup_requests' ) {
+        $view->build_info['query']=preg_replace('/users_flag_content.uid = users_flag_content__signup_log.uid/','users_flag_content.uid = users_flag_content__signup_log.uid AND flag_content_node.content_id = users_flag_content__signup_log.nid',$view->build_info['query']);
+        $view->build_info['query']=preg_replace('/GROUP BY nid/','',$view->build_info['query']);   
+  }    
+}
+
+function eran_views_query_alter(&$view, &$query) {
+  if ( $view->name == 'signup_status_user_vbo_admin' ) {
+    if (isset($query->where[0]))
+    {
+        $query->where[0]['clauses'][0]  = str_replace('node_signup_log.nid','signup_log.sid',$query->where[0]['clauses'][0]);
+    }
+  }
+  if ( $view->name == 'signup_requests' ) {
+    if (isset($query->where[0]))
+    {
+        $query->do_not_optimize = 1;
+    }
+  }
+  if ( $view->name == 'signup_status_limits' ) {
+    if (isset($query->where[0]))
+    {
+        
+    }
+  }
+  
+}
+
+function eran_views_post_render(&$view) {
+  if ( $view->name == 'signup_status_limits' ) {
+    $view->field['markup']->last_render = "HELLO"; 
+    $view->field['markup']->original_value = "HELLO"; 
+  }    
+}
+
+
+function eran_wysiwyg_editor_settings_alter(&$settings, $context) {
+  if ($context['editor']['name'] != 'ckeditor' || !isset($settings['toolbar'][0])) {
+    return;
+  }
+
+  $tools = array_flip($settings['toolbar'][0]);
+  $tools2 = $tools;
+
+  $tools['-'] = 42;
+  $map = _wysiwyg_ckeditor_nice_plugin_map();
+  $items = 0;
+
+  foreach ($map as $key => $toolgroup) {
+    if ($toolgroup == '/') {
+      // When there have been no items in this row
+      // remove the seperator
+      if ($items == 0) {
+        unset($map[$key]);
+      }
+
+      $items = 0;
+      continue;
+    }
+
+    if (!is_array($toolgroup)) {
+      continue;
+    }
+
+    foreach ($toolgroup as $k => $tool) {
+      if (!isset($tools[$tool])) {
+        unset($map[$key][$k]);
+      }
+      else {
+        unset($tools2[$tool]);
+        $items++;
+      }
+    }
+
+    if (count($map[$key]) == 0) {
+      unset($map[$key]);
+    }
+    else {
+      $map[$key] = array_values($map[$key]);
+    }
+  }
+  // Renumber
+  $map[] = array_values(array_flip($tools2));
+  $map = array_values($map);
+
+  $settings['toolbar'] = $map;
+
+  // Set language
+  global $language;
+  $settings['language'] = $language->language;
+}
+
+function _wysiwyg_ckeditor_nice_plugin_map() {
+  $map = array(
+    array('Source', '-', 'Save', 'NewPage', 'Preview', '-', 'Templates'),
+    array('Cut', 'Copy', 'Paste', 'PasteText', 'PasteFromWord', '-', 'Print', 'SpellChecker', 'Scayt'),
+    array('Undo', 'Redo', '-', 'Find', 'Replace', '-', 'SelectAll', 'RemoveFormat'),
+    array('Form', 'Checkbox', 'Radio', 'TextField', 'Textarea', 'Select', 'Button', 'ImageButton', 'HiddenField'),
+    array('Bold', 'Italic', 'Underline', 'Strike', '-', 'Subscript', 'Superscript'),
+    array('NumberedList', 'BulletedList', '-', 'Outdent', 'Indent', 'Blockquote', 'CreateDiv'),
+    array('JustifyLeft', 'JustifyCenter', 'JustifyRight', 'JustifyBlock'),
+    array('Link', 'Unlink', 'Anchor'),
+    array('Image', 'Flash', 'Table', 'HorizontalRule', 'Smiley', 'SpecialChar', 'PageBreak'),
+    array('Styles', 'Format', 'Font', 'FontSize'),
+    array('TextColor', 'BGColor'),
+    array('Maximize', 'ShowBlocks', '-', 'About'),
+  );
+
+  return $map;
+}
+
+function eran_views_api() {
+  return array(
+    'api' => 2,
+  );
+}
+
+function gettimeslotsinrange($startDate,$endDate)
+{
+    $q = "SELECT * FROM `content_type_time_slot` WHERE `field_slot_datetime_value` >= '$startDate' AND `field_slot_datetime_value` <= DATE_ADD('$endDate',INTERVAL  1 DAY)";
+    $query_result = db_query($q);
+    $timeslotsarr = array();
+    while ($result = db_fetch_object($query_result)) {
+        $timeslotsarr[] = $result->nid;
+    }
+    return($timeslotsarr);
+}
+
+

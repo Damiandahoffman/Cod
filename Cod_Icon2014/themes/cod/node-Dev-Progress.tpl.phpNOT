@@ -1,0 +1,53 @@
+<?php
+
+ 
+ $translate = array('started'=>'התחיל',
+                       'finished'=>'הסתיים',
+                       'delivered'=>'בבדיקה',
+                       'accepted'=>'התקבל',
+                       'rejected'=>'נדחה',
+                       'feature'=>'תכונה',
+                       'bug'=>'באג',
+                       'chore'=>'מטלה',
+                       'release'=>'הפצה',
+                       );
+                       
+ $projectId = 325477;
+    $pt = new PivotalTracker();
+    $pt->username = 'keeperoflogic@gmail.com';
+    $pt->password = 'Aa123456';   
+    $pt->authenticate();
+    //$project = $pt->projects_get($projectId);
+    $cur_iteration = $pt->iterations_get($projectId,'current');
+    $stories = $cur_iteration['stories']['story'];
+    $asd =2;
+?>
+
+
+<div id="node-<?php print $node->nid; ?>" class="node<?php if ($sticky) { print ' sticky'; } ?><?php if (!$status) { print ' node-unpublished'; } ?>">
+<?php print $picture ?>
+
+<?php if ($page == 0): ?>
+  <h2><a href="<?php print $node_url ?>" title="<?php print $title ?>"><?php print $title ?></a></h2>
+<?php endif; ?>
+
+  <?php if ($submitted): ?>
+    <span class="submitted"><?php print $submitted; ?></span>
+  <?php endif; ?>
+
+  <div class="content clear-block">
+    <?php print $content ?>
+  </div>
+
+  <div class="pivot_wrapper">
+    <?php foreach ($stories as $story):?>
+        <div class="pivot_story pivot_story_<?php print $story['current_state'] ?> <?php if ($story['story_type'] == 'release') print 'pivot_story_release'; ?>">
+            <div class="pivot_type pivot_type_<?php print $story['story_type'] ?>" title="<?php print $translate[$story['story_type']] ?>" ></div>
+            <div class="pivot_state pivot_state_<?php print $story['current_state']?>"><?php print $translate[$story['current_state']] ?></div>
+            <div class="pivot_title"><?php print $story['name'] ?></div>
+        </div>
+    <?php endforeach ?>
+  </div>
+
+ 
+</div>
